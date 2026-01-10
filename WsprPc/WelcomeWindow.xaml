@@ -1,0 +1,68 @@
+<Window x:Class="WsprPc.WelcomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Välkommen till TapScribe"
+        Height="520"
+        Width="640"
+        WindowStartupLocation="CenterOwner"
+        Background="#F7F9FC"
+        FontFamily="Bahnschrift">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Orientation="Horizontal" Grid.Row="0">
+      <Image Source="pack://application:,,,/Assets/tapscribe.ico" Width="40" Height="40" Margin="0,0,12,0" />
+      <StackPanel>
+        <TextBlock FontSize="20" FontWeight="SemiBold" Text="Välkommen till TapScribe PC" />
+        <TextBlock Foreground="#5B6472" Text="Kom igång på mindre än en minut." />
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel Grid.Row="1" Margin="0,16,0,0">
+      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="12">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Så funkar det" />
+          <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
+                     Text="Håll in F8 för direkt transkribering. Håll in F9 för transkribering + AI‑bearbetning." />
+          <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
+                     Text="Du kan använda TapScribe helt utan AI. AI‑läget är valfritt." />
+        </StackPanel>
+      </Border>
+
+      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,12,0,0">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Rekommenderad modell" />
+          <TextBlock x:Name="RecommendedModelText" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#1F2937" />
+          <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#5B6472"
+                     Text="Du kan alltid byta modell senare under Avancerat → Modellhantering." />
+        </StackPanel>
+      </Border>
+
+      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,12,0,0">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Visa ikonen i systemfältet" />
+          <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="#5B6472"
+                     Text="Windows 11: Inställningar → Personalisering → Aktivitetsfält → Andra systemfältsikoner → slå på TapScribe." />
+          <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Foreground="#5B6472"
+                     Text="Windows 10: Inställningar → Anpassning → Aktivitetsfält → Välj vilka ikoner som visas → slå på TapScribe." />
+        </StackPanel>
+      </Border>
+
+      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,12,0,0">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Autostart" />
+          <CheckBox x:Name="AutoStartCheckBox" Content="Starta TapScribe automatiskt när jag loggar in på Windows" Margin="0,8,0,0" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+      <Button x:Name="SkipButton" Width="100" Content="Hoppa över" Background="#E5E7EB" />
+      <Button x:Name="DownloadButton" Width="180" Margin="8,0,0,0" Content="Ladda ner modell" Background="#2563EB" Foreground="White" />
+    </StackPanel>
+  </Grid>
+</Window>

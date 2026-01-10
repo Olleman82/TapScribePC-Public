@@ -1,0 +1,168 @@
+<Window x:Class="WsprPc.FaqWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Vanliga frågor – TapScribe" Height="520" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource WindowBg}"
+        FontFamily="Segoe UI">
+  <!-- No local resources needed, using App.xaml global resources -->
+  
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock FontSize="20" FontWeight="SemiBold" Text="❓ Vanliga frågor" Foreground="{DynamicResource TextPrimary}" />
+      <TextBlock Foreground="{DynamicResource TextSecondary}" Text="Tips och tricks för att få ut mesta möjliga av TapScribe" />
+    </StackPanel>
+    
+    <!-- FAQ Items -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        
+        <!-- FAQ 1: Kontroll -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🎯 Jag känner att jag inte har kontroll – jag ser inte vad som händer!" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run FontWeight="Medium" Foreground="{DynamicResource TextPrimary}">Lösning:</Run>
+              <Run>Fäst TapScribe-ikonen i aktivitetsfältet så att du alltid ser status.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Windows 11:</Run>
+              <Run>Inställningar → Personalisering → Aktivitetsfält → Andra systemfältsikoner → TapScribe</Run>
+              <LineBreak />
+              <Run FontWeight="Medium">Windows 10:</Run>
+              <Run>Högerklicka på aktivitetsfältet → Inställningar → Välj vilka ikoner som visas</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+        <!-- FAQ 2: Promptar -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="💡 Vad ska jag ha promptarna till?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run>Promptar låter dig bearbeta din transkribering med AI. Några exempel:</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">• WhatsApp-meddelande:</Run>
+              <Run>"Gör ett kort, vänligt WhatsApp-meddelande. Lägg till en passande emoji."</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">• E-post:</Run>
+              <Run>"Skriv om det här till ett kortfattat och artigt mejl."</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">• LinkedIn-svar:</Run>
+              <Run>Prata in: "Jag vill svara på en kommentar om AI. Jag tycker X och Y. Gör det artigt men to the point."</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">• Fri prompt:</Run>
+              <Run>En prompt som gör exakt det du säger. OBS! Lägg till instruktionen "Svara ENDAST med själva texten, ingen inledning." – annars kan AI:n svara "Okej, här kommer svaret:" innan ditt innehåll.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+        <!-- FAQ 3: Minne -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🧠 Vad är Minne och hur använder jag det?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run>Minne är fakta som AI:n får tillgång till när "Använd minne" är aktiverat på en prompt.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Exempel på minnespost:</Run>
+              <Run>"Min bokningslänk: https://aiolle.se/bokning"</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Sen säger du:</Run>
+              <Run>"Hej Anna! Självklart ska vi ta ett möte. Infoga länken till min bokningskalender."</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">AI:n svarar:</Run>
+              <Run>"Hej Anna! Självklart! Boka en tid som passar dig här: https://aiolle.se/bokning"</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+        <!-- FAQ 4: F8 vs F9 -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="⌨️ Vad är skillnaden mellan F8 och F9?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run FontWeight="Medium">F8 (Direkt):</Run>
+              <Run>Transkriberar det du säger och klistrar in texten direkt – ingen AI-bearbetning.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">F9 (AI):</Run>
+              <Run>Transkriberar först, sedan förbättrar AI:n texten enligt din valda prompt innan den klistras in.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+        <!-- FAQ 5: Inget händer -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🔇 Det händer ingenting när jag trycker på tangenten!" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run>Kontrollera följande:</Run>
+              <LineBreak />
+              <Run>• Har du laddat ner en Whisper-modell? (Se "Modellhantering")</Run>
+              <LineBreak />
+              <Run>• Är din mikrofon aktiverad?</Run>
+              <LineBreak />
+              <Run>• Om appen verkar "hängig" – starta om TapScribe.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+        <!-- FAQ 6: API-nycklar -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,12,0,0">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🔑 Hur skaffar jag API-nycklar?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run>TapScribe kan använda externa AI-tjänster för textbearbetning. Du behöver en egen API-nyckel från den leverantör du vill använda.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Gemini (Google):</Run>
+              <LineBreak />
+              <Run>1. Gå till aistudio.google.com och logga in med ditt Google-konto</Run>
+              <LineBreak />
+              <Run>2. Klicka "Get API key" → "Create API key"</Run>
+              <LineBreak />
+              <Run>3. Kopiera nyckeln och klistra in den i TapScribe</Run>
+              <LineBreak />
+              <Run FontStyle="Italic">Gratis att skapa, men kan ha användningskvoter.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">OpenAI:</Run>
+              <LineBreak />
+              <Run>1. Gå till platform.openai.com och skapa konto</Run>
+              <LineBreak />
+              <Run>2. Aktivera betalning (Settings → Billing) – minst $5</Run>
+              <LineBreak />
+              <Run>3. Skapa API-nyckel under API Keys</Run>
+              <LineBreak />
+              <Run FontStyle="Italic">OBS: ChatGPT Plus-prenumeration ger INTE API-åtkomst!</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">⚠️ Säkerhet:</Run>
+              <Run>Dela aldrig din API-nyckel! Behandla den som ett lösenord. Om den läcker – skapa en ny och ta bort den gamla.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        
+      </StackPanel>
+    </ScrollViewer>
+    
+    <!-- Close Button -->
+    <Button Grid.Row="2" x:Name="CloseButton" HorizontalAlignment="Right" Margin="0,16,0,0" 
+            Padding="24,10" Content="Stäng" Click="CloseButton_Click" Style="{StaticResource PrimaryButton}" />
+  </Grid>
+</Window>

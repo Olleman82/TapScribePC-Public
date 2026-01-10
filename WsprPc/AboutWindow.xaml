@@ -1,0 +1,66 @@
+<Window x:Class="WsprPc.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Om TapScribe PC" Height="480" Width="560" WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBg}"
+        FontFamily="Segoe UI"
+        Icon="pack://application:,,,/Assets/tapscribe.ico">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+      <Image Source="pack://application:,,,/aiolle_transparent.png" Width="56" Height="56" Margin="0,0,12,0" />
+      <StackPanel>
+        <TextBlock FontSize="18" FontWeight="SemiBold" Text="TapScribe PC" Foreground="{DynamicResource TextPrimary}" />
+        <TextBlock Foreground="{DynamicResource TextSecondary}" Text="🎙 Röst till AI‑assistent för skrivande." />
+        <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" Text="Version okänd" />
+      </StackPanel>
+    </StackPanel>
+
+    <Border Grid.Row="1" Margin="0,12,0,8" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="12" Background="{DynamicResource CardBg}">
+      <StackPanel>
+        <TextBlock FontWeight="SemiBold" Text="Integritet &amp; AI" Foreground="{DynamicResource TextPrimary}" />
+        <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}"
+                   Text="Transkribering körs lokalt. Om AI‑bearbetning används skickas transkriberingen till vald AI‑leverantör för förfining." />
+        <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}"
+                   Text="Appen sparar minnen, promptar och API‑nycklar lokalt. Inget skickas till AIOlle eller andra tredjepartstjänster utöver vald AI‑leverantör." />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="12" Background="{DynamicResource CardBg}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+          <TextBlock FontWeight="SemiBold" Text="Skapad av" Foreground="{DynamicResource TextPrimary}" />
+          <TextBlock Text="Olle Söderqvist" Foreground="{DynamicResource TextPrimary}" />
+          <TextBlock Margin="0,10,0,0" FontWeight="SemiBold" Text="Kontakt" Foreground="{DynamicResource TextPrimary}" />
+          <TextBlock Margin="0,6,0,0">
+            <Hyperlink x:Name="LinkedInLink">linkedin.com/in/olle-soderqvist</Hyperlink>
+          </TextBlock>
+          <TextBlock Margin="0,4,0,0">
+            <Hyperlink x:Name="WebsiteLink">aiolle.se</Hyperlink>
+          </TextBlock>
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock FontWeight="SemiBold" Text="Tack till" Foreground="{DynamicResource TextPrimary}" />
+          <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}">
+            Stort tack till <Hyperlink x:Name="KbLabbetLink">KB Labbet</Hyperlink> för deras öppna KB-Whisper modeller som möjliggör denna app.
+          </TextBlock>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <DockPanel Grid.Row="3" Margin="0,12,0,0" LastChildFill="False">
+        <Button x:Name="CheckUpdatesButton" Content="Sök efter uppdatering" DockPanel.Dock="Left" Padding="10,4" Cursor="Hand" />
+        <Button Width="90" DockPanel.Dock="Right" Content="Stäng" x:Name="CloseButton" />
+    </DockPanel>
+  </Grid>
+</Window>
