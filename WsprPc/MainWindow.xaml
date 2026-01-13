@@ -322,7 +322,7 @@
     <Border Grid.Row="3" Background="{DynamicResource FooterBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,1,0,0" Padding="16,8">
       <DockPanel>
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-          <Image Source="pack://application:,,,/aiolle_transparent.png" Width="20" Height="20" Margin="0,0,8,0" />
+          <Image Source="pack://application:,,,/Assets/aiolle_transparent.png" Width="20" Height="20" Margin="0,0,8,0" />
           <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Olle Söderqvist" />
         </StackPanel>
         <TextBlock x:Name="HotkeyText" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="24,0,0,0" Text="Direkt: F8 • AI: F9" />

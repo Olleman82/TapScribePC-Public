@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\tapscribe.ico" />
-    <Resource Include="..\aiolle_transparent.png" Link="aiolle_transparent.png" />
+    <Resource Include="Assets\aiolle_transparent.png" />
     <None Include="..\TapScribe_README.txt" Link="TapScribe_README.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="BuildId.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\third_party\whisper.cpp_bin_v1.5.1_x64\whisper-cli.exe" Link="whisper-cli.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
