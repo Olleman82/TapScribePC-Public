@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageReference Include="Whisper.net" Version="1.5.0" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.5.0" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.11.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -316,6 +316,79 @@
           </StackPanel>
         </Grid>
       </TabItem>
+      
+      <!-- TAB 3: Filer (Transcribe Audio Files) -->
+      <TabItem Header="Filer">
+        <StackPanel Margin="0,12,0,0">
+          
+          <!-- Model Download Banner -->
+          <Border x:Name="DiarizationModelBanner" Visibility="Collapsed" Background="{DynamicResource AccentLight}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Modeller för talarigenkänning saknas" FontWeight="SemiBold" Foreground="{DynamicResource AccentForeground}" />
+              <TextBlock Text="Klicka nedan för att ladda ner (~150 MB). Detta behövs bara en gång." FontSize="12" Foreground="{DynamicResource AccentForeground}" Margin="0,4,0,8" />
+              <StackPanel Orientation="Horizontal">
+                <Button x:Name="DownloadDiarizationModelsButton" Content="Ladda ner modeller" Style="{StaticResource PrimaryButton}" />
+                <ProgressBar x:Name="DiarizationModelDownloadProgress" Width="200" Height="6" Margin="12,0,0,0" Visibility="Collapsed" />
+              </StackPanel>
+              <TextBlock x:Name="DiarizationModelDownloadStatus" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,6,0,0" />
+            </StackPanel>
+          </Border>
+          
+          <!-- File Selection Card -->
+          <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="14" Effect="{StaticResource CardShadow}" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Transkribera ljudfil" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8" />
+              <TextBlock Text="Ladda upp en mötesinspelning (MP3, WAV, M4A) för transkribering med talarigenkänning." FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,12" />
+              
+              <!-- File Picker Row -->
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <Button x:Name="SelectAudioFileButton" Content="Välj fil..." Padding="12,6" />
+                <TextBlock x:Name="SelectedAudioFileText" Text="Ingen fil vald" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="13" Foreground="{DynamicResource TextSecondary}" />
+              </StackPanel>
+              
+              <!-- Options Row -->
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="Antal talare (valfritt):" VerticalAlignment="Center" FontSize="13" />
+                <ComboBox x:Name="SpeakerCountCombo" Width="80" Margin="10,0,0,0" SelectedIndex="0">
+                  <ComboBoxItem Content="Auto" />
+                  <ComboBoxItem Content="2" />
+                  <ComboBoxItem Content="3" />
+                  <ComboBoxItem Content="4" />
+                  <ComboBoxItem Content="5+" />
+                </ComboBox>
+              </StackPanel>
+              
+              <!-- Start Button -->
+              <StackPanel Orientation="Horizontal">
+                <Button x:Name="StartFileTranscriptionButton" Content="Starta transkribering" Style="{StaticResource PrimaryButton}" IsEnabled="False" Padding="14,8" />
+                <Button x:Name="CancelFileTranscriptionButton" Content="Avbryt" Visibility="Collapsed" Margin="10,0,0,0" Padding="12,6" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          
+          <!-- Progress Card -->
+          <Border x:Name="FileTranscriptionProgressPanel" Visibility="Collapsed" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="14" Effect="{StaticResource CardShadow}" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock x:Name="FileTranscriptionStatusText" Text="Bearbetar..." FontWeight="Medium" Margin="0,0,0,8" />
+              <ProgressBar x:Name="FileTranscriptionProgressBar" Height="8" />
+              <TextBlock x:Name="FileTranscriptionPercentText" Text="0%" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,6,0,0" HorizontalAlignment="Right" />
+            </StackPanel>
+          </Border>
+          
+          <!-- Result Card -->
+          <Border x:Name="FileTranscriptionResultPanel" Visibility="Collapsed" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="14" Effect="{StaticResource CardShadow}">
+            <StackPanel>
+              <TextBlock Text="Resultat" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8" />
+              <TextBox x:Name="FileTranscriptionResultText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="220" VerticalScrollBarVisibility="Auto" Background="{DynamicResource WindowBg}" BorderThickness="1" Padding="8" FontFamily="Consolas" FontSize="12" />
+              <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Button x:Name="CopyFileTranscriptionButton" Content="Kopiera text" Padding="12,6" />
+                <Button x:Name="SaveFileTranscriptionButton" Content="Spara till fil" Margin="10,0,0,0" Padding="12,6" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          
+        </StackPanel>
+      </TabItem>
     </TabControl>
     
     <!-- FOOTER -->

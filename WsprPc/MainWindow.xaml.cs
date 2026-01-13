@@ -19,6 +19,7 @@ using WsprPc.Models;
 using WsprPc.Services;
 using WsprPc.Services.Ai;
 using WsprPc.Services.Vad;
+using WsprPc.Services.Diarization;
 using WsprPc.Stores;
 
 namespace WsprPc;
@@ -56,6 +57,11 @@ public partial class MainWindow : Window
     private bool _isStartingUp = false;
     private bool _welcomeShowing = false;
     private string? _clipboardContext;
+    
+    // File Transcription (Diarization) fields
+    private FileTranscriptionService? _fileTranscriptionService;
+    private string? _selectedAudioFilePath;
+    private CancellationTokenSource? _fileTranscriptionCts;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -169,6 +175,17 @@ public partial class MainWindow : Window
         DarkModeToggle.Unchecked += (_, _) => ApplyTheme(false);
         DarkModeToggle.IsChecked = _config.DarkMode;
         if (_config.DarkMode) ApplyTheme(true);
+        
+        // File Transcription (Filer) tab event handlers
+        SelectAudioFileButton.Click += (_, _) => SelectAudioFile();
+        StartFileTranscriptionButton.Click += async (_, _) => await StartFileTranscriptionAsync();
+        CancelFileTranscriptionButton.Click += (_, _) => CancelFileTranscription();
+        CopyFileTranscriptionButton.Click += (_, _) => CopyFileTranscriptionResult();
+        SaveFileTranscriptionButton.Click += (_, _) => SaveFileTranscriptionResult();
+        DownloadDiarizationModelsButton.Click += async (_, _) => await DownloadDiarizationModelsAsync();
+        
+        // Initialize file transcription service
+        InitializeFileTranscriptionService();
 
         Loaded += (_, _) => ApplyTitleBarTheme(_config.DarkMode);
         ContentRendered += (_, _) => _ = InitializeStartupFlowAsync();
@@ -2126,6 +2143,231 @@ private static bool IsUsablePath(string path)
         string fallback = Path.Combine(baseDir, "whisper_win32", "whisper-cli.exe");
         return File.Exists(fallback) ? fallback : null;
     }
+
+    #region File Transcription (Diarization)
+
+    private void InitializeFileTranscriptionService()
+    {
+        try
+        {
+            string modelsPath = _config.SherpaModelsPath ?? 
+                Path.Combine(AppContext.BaseDirectory, "third_party", "models", "sherpa");
+            
+            _fileTranscriptionService = new FileTranscriptionService(_engine, modelsPath);
+            
+            // Check if models exist and update UI
+            UpdateDiarizationModelBanner();
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("Failed to initialize file transcription service", ex);
+        }
+    }
+
+    private void UpdateDiarizationModelBanner()
+    {
+        bool modelsReady = _fileTranscriptionService?.ModelsReady ?? false;
+        DiarizationModelBanner.Visibility = modelsReady ? Visibility.Collapsed : Visibility.Visible;
+        StartFileTranscriptionButton.IsEnabled = modelsReady && !string.IsNullOrEmpty(_selectedAudioFilePath);
+    }
+
+    private void SelectAudioFile()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Välj ljudfil",
+            Filter = "Ljudfiler (*.mp3;*.wav;*.m4a)|*.mp3;*.wav;*.m4a|Alla filer (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            _selectedAudioFilePath = dialog.FileName;
+            SelectedAudioFileText.Text = Path.GetFileName(_selectedAudioFilePath);
+            SelectedAudioFileText.Foreground = (System.Windows.Media.Brush)FindResource("TextPrimary");
+            
+            // Enable start button if models are ready
+            StartFileTranscriptionButton.IsEnabled = _fileTranscriptionService?.ModelsReady ?? false;
+            
+            // Hide previous result
+            FileTranscriptionResultPanel.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task DownloadDiarizationModelsAsync()
+    {
+        if (_fileTranscriptionService == null)
+            return;
+
+        try
+        {
+            DownloadDiarizationModelsButton.IsEnabled = false;
+            DiarizationModelDownloadProgress.Visibility = Visibility.Visible;
+            DiarizationModelDownloadProgress.IsIndeterminate = false;
+
+            var progress = new Progress<(int percent, string status)>(p =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    DiarizationModelDownloadProgress.Value = p.percent;
+                    DiarizationModelDownloadStatus.Text = $"{p.status} ({p.percent}%)";
+                });
+            });
+
+            await _fileTranscriptionService.EnsureModelsAsync(progress);
+            
+            DiarizationModelDownloadStatus.Text = "Modeller installerade!";
+            await Task.Delay(1500);
+            UpdateDiarizationModelBanner();
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("Failed to download diarization models", ex);
+            DiarizationModelDownloadStatus.Text = $"Fel: {ex.Message}";
+            DownloadDiarizationModelsButton.IsEnabled = true;
+        }
+        finally
+        {
+            DiarizationModelDownloadProgress.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task StartFileTranscriptionAsync()
+    {
+        if (_fileTranscriptionService == null || string.IsNullOrEmpty(_selectedAudioFilePath))
+            return;
+
+        // Check if models need to be downloaded
+        if (!_fileTranscriptionService.ModelsReady)
+        {
+            DiarizationModelBanner.Visibility = Visibility.Visible;
+            return;
+        }
+
+        try
+        {
+            _fileTranscriptionCts = new CancellationTokenSource();
+            
+            // Update UI state
+            StartFileTranscriptionButton.IsEnabled = false;
+            SelectAudioFileButton.IsEnabled = false;
+            CancelFileTranscriptionButton.Visibility = Visibility.Visible;
+            FileTranscriptionProgressPanel.Visibility = Visibility.Visible;
+            FileTranscriptionResultPanel.Visibility = Visibility.Collapsed;
+            FileTranscriptionProgressBar.Value = 0;
+            FileTranscriptionStatusText.Text = "Startar...";
+            FileTranscriptionPercentText.Text = "0%";
+
+            // Get expected speaker count
+            int? expectedSpeakers = SpeakerCountCombo.SelectedIndex switch
+            {
+                1 => 2,
+                2 => 3,
+                3 => 4,
+                4 => 5,
+                _ => null // Auto
+            };
+
+            var progress = new Progress<(int percent, string status)>(p =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    FileTranscriptionProgressBar.Value = p.percent;
+                    FileTranscriptionStatusText.Text = p.status;
+                    FileTranscriptionPercentText.Text = $"{p.percent}%";
+                });
+            });
+
+            _logger?.Info($"Starting file transcription: {_selectedAudioFilePath}");
+            
+            string result = await _fileTranscriptionService.TranscribeAsync(
+                _selectedAudioFilePath,
+                expectedSpeakers,
+                progress,
+                _fileTranscriptionCts.Token);
+
+            // Show result
+            FileTranscriptionResultText.Text = result;
+            FileTranscriptionResultPanel.Visibility = Visibility.Visible;
+            
+            _logger?.Info($"File transcription completed: {result.Length} chars");
+        }
+        catch (OperationCanceledException)
+        {
+            _logger?.Info("File transcription cancelled");
+            FileTranscriptionStatusText.Text = "Avbruten";
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("File transcription failed", ex);
+            FileTranscriptionStatusText.Text = $"Fel: {ex.Message}";
+            WpfMessageBox.Show(
+                $"Transkribering misslyckades:\n{ex.Message}",
+                "Fel",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            // Reset UI state
+            StartFileTranscriptionButton.IsEnabled = true;
+            SelectAudioFileButton.IsEnabled = true;
+            CancelFileTranscriptionButton.Visibility = Visibility.Collapsed;
+            FileTranscriptionProgressPanel.Visibility = Visibility.Collapsed;
+            _fileTranscriptionCts?.Dispose();
+            _fileTranscriptionCts = null;
+        }
+    }
+
+    private void CancelFileTranscription()
+    {
+        _fileTranscriptionCts?.Cancel();
+    }
+
+    private void CopyFileTranscriptionResult()
+    {
+        string text = FileTranscriptionResultText.Text;
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            System.Windows.Clipboard.SetText(text);
+            _trayIcon?.ShowBalloon("TapScribe PC", "Text kopierad till urklipp!");
+        }
+    }
+
+    private void SaveFileTranscriptionResult()
+    {
+        string text = FileTranscriptionResultText.Text;
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Spara transkription",
+            Filter = "Textfil (*.txt)|*.txt|Alla filer (*.*)|*.*",
+            DefaultExt = ".txt",
+            FileName = Path.GetFileNameWithoutExtension(_selectedAudioFilePath ?? "transkription") + "_transkription.txt"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                File.WriteAllText(dialog.FileName, text);
+                _trayIcon?.ShowBalloon("TapScribe PC", $"Sparad till {Path.GetFileName(dialog.FileName)}");
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error("Failed to save transcription", ex);
+                WpfMessageBox.Show(
+                    $"Kunde inte spara filen:\n{ex.Message}",
+                    "Fel",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+    }
+
+    #endregion
 }
 
 

@@ -41,6 +41,10 @@ public sealed class AppConfig
     public int? ManualThreads { get; set; }
     public bool DarkMode { get; set; }
     public bool EnableVad { get; set; } = true;
+    
+    // Diarization settings
+    public string? SherpaModelsPath { get; set; }
+    public bool SherpaModelsDownloaded { get; set; }
 
     public static AppConfig Load(string path)
     {
