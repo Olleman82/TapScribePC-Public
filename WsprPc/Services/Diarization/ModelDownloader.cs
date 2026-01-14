@@ -14,18 +14,21 @@ public class ModelDownloader
 {
     private static readonly HttpClient _http = new();
     
-    // Sherpa-ONNX speaker segmentation model (3Dspeaker)
+    // Sherpa-ONNX speaker segmentation model
+    // URL source: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
     private const string SegmentationModelUrl = 
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2";
     
     // Sherpa-ONNX speaker embedding model
+    // URL source: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
     private const string EmbeddingModelUrl = 
         "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx";
     
     private readonly string _modelsDir;
     
-    public string SegmentationModelPath => Path.Combine(_modelsDir, "segmentation-3.0.onnx");
-    public string EmbeddingModelPath => Path.Combine(_modelsDir, "3dspeaker_embedding.onnx");
+    // The tarball extracts a folder "sherpa-onnx-pyannote-segmentation-3-0", inside is "model.onnx"
+    public string SegmentationModelPath => Path.Combine(_modelsDir, "sherpa-onnx-pyannote-segmentation-3-0", "model.onnx");
+    public string EmbeddingModelPath => Path.Combine(_modelsDir, "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx");
     
     public bool ModelsExist => 
         File.Exists(SegmentationModelPath) && 
@@ -51,32 +54,48 @@ public class ModelDownloader
 
         try
         {
-            // Download segmentation model
-            progress?.Report((0, "Laddar ner segmenteringsmodell..."));
-            await DownloadFileAsync(
-                SegmentationModelUrl, 
-                SegmentationModelPath, 
-                percent => progress?.Report((percent / 2, "Laddar ner segmenteringsmodell...")),
-                ct);
+            // 1. Download and Extract Segmentation Model
+            if (!File.Exists(SegmentationModelPath))
+            {
+                string tarPath = Path.Combine(_modelsDir, "segmentation.tar.bz2");
+                
+                progress?.Report((0, "Laddar ner segmenteringsmodell..."));
+                await DownloadFileAsync(
+                    SegmentationModelUrl, 
+                    tarPath, 
+                    percent => progress?.Report((percent / 2, "Laddar ner segmenteringsmodell...")),
+                    ct);
 
-            // Download embedding model
-            progress?.Report((50, "Laddar ner talarmodell..."));
-            await DownloadFileAsync(
-                EmbeddingModelUrl, 
-                EmbeddingModelPath, 
-                percent => progress?.Report((50 + percent / 2, "Laddar ner talarmodell...")),
-                ct);
+                progress?.Report((50, "Packar upp segmenteringsmodell..."));
+                await ExtractTarBz2Async(tarPath, _modelsDir);
+                
+                // Cleanup archive
+                try { File.Delete(tarPath); } catch { }
+            }
+
+            // 2. Download Embedding Model
+            if (!File.Exists(EmbeddingModelPath))
+            {
+                progress?.Report((60, "Laddar ner talarmodell..."));
+                await DownloadFileAsync(
+                    EmbeddingModelUrl, 
+                    EmbeddingModelPath, 
+                    percent => progress?.Report((60 + (int)(percent * 0.4), "Laddar ner talarmodell...")),
+                    ct);
+            }
 
             progress?.Report((100, "Klart!"));
             return true;
         }
         catch (Exception)
         {
-            // Clean up partial downloads
-            if (File.Exists(SegmentationModelPath))
-                File.Delete(SegmentationModelPath);
-            if (File.Exists(EmbeddingModelPath))
-                File.Delete(EmbeddingModelPath);
+            // Clean up partial downloads if needed, but be careful not to delete good files
+            try 
+            {
+                if (File.Exists(Path.Combine(_modelsDir, "segmentation.tar.bz2")))
+                    File.Delete(Path.Combine(_modelsDir, "segmentation.tar.bz2"));
+            } 
+            catch { }
             throw;
         }
     }
@@ -109,6 +128,32 @@ public class ModelDownloader
                 int percent = (int)(totalRead * 100 / totalBytes);
                 progressCallback?.Invoke(percent);
             }
+        }
+    }
+
+    private async Task ExtractTarBz2Async(string tarPath, string outputDir)
+    {
+        // Use system tar command (available on Win10+ and checking if it works)
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "tar",
+            Arguments = $"-xjf \"{tarPath}\" -C \"{outputDir}\"",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi);
+        if (process == null)
+            throw new InvalidOperationException("Failed to start tar process.");
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
+        {
+            string error = await process.StandardError.ReadToEndAsync();
+            throw new InvalidOperationException($"Tar conversion failed: {error}");
         }
     }
 }

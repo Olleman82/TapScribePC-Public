@@ -2278,11 +2278,15 @@ private static bool IsUsablePath(string path)
                 });
             });
 
-            _logger?.Info($"Starting file transcription: {_selectedAudioFilePath}");
+            // Get optimal threads from config
+            int numThreads = CalculateCpuThreads();
+
+            _logger?.Info($"Starting file transcription: {_selectedAudioFilePath} using {numThreads} threads");
             
             string result = await _fileTranscriptionService.TranscribeAsync(
                 _selectedAudioFilePath,
                 expectedSpeakers,
+                numThreads,
                 progress,
                 _fileTranscriptionCts.Token);
 

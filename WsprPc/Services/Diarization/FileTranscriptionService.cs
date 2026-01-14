@@ -56,6 +56,7 @@ public sealed class FileTranscriptionService : IDisposable
     public async Task<string> TranscribeAsync(
         string filePath,
         int? expectedSpeakers = null,
+        int numThreads = 1,
         IProgress<(int percent, string status)>? progress = null,
         CancellationToken ct = default)
     {
@@ -69,7 +70,7 @@ public sealed class FileTranscriptionService : IDisposable
         if (!_diarizer.IsInitialized)
         {
             progress?.Report((12, "Initierar talarmodell..."));
-            _diarizer.Initialize();
+            _diarizer.Initialize(numThreads);
         }
 
         // Phase 3: Run diarization (10-40%)
@@ -145,8 +146,9 @@ public sealed class FileTranscriptionService : IDisposable
             {
                 if (sb.Length > 0)
                     sb.AppendLine();
-                    
-                sb.AppendLine($"[Talare {segment.SpeakerId + 1}]");
+                
+                string timestamp = $"[{segment.Start:mm\\:ss}]";
+                sb.AppendLine($"{timestamp} [Talare {segment.SpeakerId + 1}]");
                 lastSpeaker = segment.SpeakerId;
             }
 

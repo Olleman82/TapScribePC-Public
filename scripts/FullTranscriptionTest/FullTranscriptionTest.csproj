@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.11.3" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
+    <PackageReference Include="Whisper.net" Version="1.5.0" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\WsprPc\Services\Diarization\ModelDownloader.cs" Link="Services\ModelDownloader.cs" />
+    <Compile Include="..\..\WsprPc\Services\Diarization\SherpaDiarizationService.cs" Link="Services\SherpaDiarizationService.cs" />
+    <Compile Include="..\..\WsprPc\Services\Diarization\AudioFileLoader.cs" Link="Services\AudioFileLoader.cs" />
+    <Compile Include="..\..\WsprPc\Services\Diarization\FileTranscriptionService.cs" Link="Services\FileTranscriptionService.cs" />
+    <Compile Include="..\..\WsprPc\Services\WhisperNetEngine.cs" Link="Services\WhisperNetEngine.cs" />
+    <Compile Include="..\..\WsprPc\Services\ITranscriptionEngine.cs" Link="Services\ITranscriptionEngine.cs" />
+    <Compile Include="..\..\WsprPc\Models\DiarizationSegment.cs" Link="Models\DiarizationSegment.cs" />
+  </ItemGroup>
+
+</Project>

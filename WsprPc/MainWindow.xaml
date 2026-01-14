@@ -365,6 +365,22 @@
               </StackPanel>
             </StackPanel>
           </Border>
+
+          <!-- Performance Info Card -->
+          <Border Background="{DynamicResource AccentLight}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1,1,1,3" CornerRadius="8" Padding="14,12" Margin="0,0,0,10">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                <TextBlock Text="ℹ️" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock Text="Prestanda och kapacitet" FontWeight="SemiBold" Foreground="{DynamicResource AccentForeground}" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock FontSize="12" Foreground="{DynamicResource AccentForeground}" TextWrapping="Wrap" LineHeight="18">
+                Denna funktion är mycket resurskrävande och drar mycket kapacitet från datorn. 
+                Beroende på din dators prestanda kan tidsåtgången variera från dubbelt så lång som ljudfilen 
+                till flera gånger snabbare än realtid.
+              </TextBlock>
+            </StackPanel>
+          </Border>
+
           
           <!-- Progress Card -->
           <Border x:Name="FileTranscriptionProgressPanel" Visibility="Collapsed" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="14" Effect="{StaticResource CardShadow}" Margin="0,0,0,10">
