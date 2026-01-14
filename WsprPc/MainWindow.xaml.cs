@@ -2244,9 +2244,19 @@ private static bool IsUsablePath(string path)
             return;
         }
 
+        Stopwatch sw = new Stopwatch();
         try
         {
             _fileTranscriptionCts = new CancellationTokenSource();
+            
+            // Get audio length
+            TimeSpan audioDuration = TimeSpan.Zero;
+            try
+            {
+                using var reader = new NAudio.Wave.AudioFileReader(_selectedAudioFilePath);
+                audioDuration = reader.TotalTime;
+            }
+            catch { }
             
             // Update UI state
             StartFileTranscriptionButton.IsEnabled = false;
@@ -2257,16 +2267,24 @@ private static bool IsUsablePath(string path)
             FileTranscriptionProgressBar.Value = 0;
             FileTranscriptionStatusText.Text = "Startar...";
             FileTranscriptionPercentText.Text = "0%";
+            AudioTotalLengthText.Text = audioDuration.ToString(@"mm\:ss");
+            TranscriptionElapsedTimeText.Text = "00:00";
 
-            // Get expected speaker count
-            int? expectedSpeakers = SpeakerCountCombo.SelectedIndex switch
+            // Get expected speaker count (Auto = 0, 1 = 1, 2 = 2, ...)
+            int? expectedSpeakers = null;
+            if (SpeakerCountCombo.SelectedIndex > 0)
             {
-                1 => 2,
-                2 => 3,
-                3 => 4,
-                4 => 5,
-                _ => null // Auto
+                expectedSpeakers = SpeakerCountCombo.SelectedIndex;
+            }
+
+            sw.Start();
+            
+            // Create a timer to update elapsed time UI
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Tick += (s, e) => {
+                TranscriptionElapsedTimeText.Text = sw.Elapsed.ToString(@"mm\:ss");
             };
+            timer.Start();
 
             var progress = new Progress<(int percent, string status)>(p =>
             {
@@ -2290,11 +2308,24 @@ private static bool IsUsablePath(string path)
                 progress,
                 _fileTranscriptionCts.Token);
 
+            sw.Stop();
+            timer.Stop();
+
+            // Calculate speed multiplier
+            double speedMultiplier = 0;
+            if (audioDuration.TotalSeconds > 0 && sw.Elapsed.TotalSeconds > 0)
+            {
+                speedMultiplier = audioDuration.TotalSeconds / sw.Elapsed.TotalSeconds;
+            }
+
             // Show result
             FileTranscriptionResultText.Text = result;
             FileTranscriptionResultPanel.Visibility = Visibility.Visible;
             
-            _logger?.Info($"File transcription completed: {result.Length} chars");
+            // Set stats text
+            TranscriptionStatsText.Text = $"Bearbetat på {sw.Elapsed:mm\\:ss} ({speedMultiplier:F1}x ljudhastighet)";
+            
+            _logger?.Info($"File transcription completed: {result.Length} chars. Speed: {speedMultiplier:F1}x");
         }
         catch (OperationCanceledException)
         {
