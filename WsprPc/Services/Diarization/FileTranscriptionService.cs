@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,75 +59,102 @@ public sealed class FileTranscriptionService : IDisposable
         IProgress<(int percent, string status)>? progress = null,
         CancellationToken ct = default)
     {
-        // Phase 1: Load audio (0-10%)
-        progress?.Report((0, "Laddar ljudfil..."));
-        var audioFloat = await AudioFileLoader.LoadAsFloatAsync(filePath, ct);
-        var audioPcm16 = await AudioFileLoader.LoadAsync(filePath, ct);
-        progress?.Report((10, "Ljudfil laddad"));
-
-        // Phase 2: Initialize diarizer if needed
-        if (!_diarizer.IsInitialized)
+        // Set process priority to BelowNormal during heavy processing
+        var originalPriority = Process.GetCurrentProcess().PriorityClass;
+        try
         {
-            progress?.Report((12, "Initierar talarmodell..."));
-            _diarizer.Initialize(numThreads);
-        }
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
 
-        // Phase 3: Run diarization (10-40%)
-        progress?.Report((15, "Identifierar talare..."));
-        var diarizationProgress = new Progress<int>(p => 
-            progress?.Report((15 + (int)(p * 0.25), "Identifierar talare...")));
-        
-        var segments = await _diarizer.DiarizeAsync(
-            audioFloat, 
-            expectedSpeakers, 
-            diarizationProgress, 
-            ct);
+            // Phase 1: Load audio (0-10%)
+            progress?.Report((0, "Laddar ljudfil..."));
+            var audioFloat = await AudioFileLoader.LoadAsFloatAsync(filePath, ct);
+            var audioPcm16 = await AudioFileLoader.LoadAsync(filePath, ct);
+            progress?.Report((10, "Ljudfil laddad"));
 
-        if (segments.Count == 0)
-        {
-            progress?.Report((100, "Inga talare hittades"));
-            return "[Inga talare hittades i inspelningen]";
-        }
-
-        // Phase 4: Transcribe each segment (40-95%)
-        progress?.Report((40, $"Transkriberar {segments.Count} segment..."));
-        
-        var transcribedSegments = new List<DiarizationSegment>();
-        int segmentIndex = 0;
-        
-        foreach (var segment in segments)
-        {
-            ct.ThrowIfCancellationRequested();
-            
-            int percent = 40 + (int)(55.0 * segmentIndex / segments.Count);
-            progress?.Report((percent, $"Transkriberar segment {segmentIndex + 1}/{segments.Count}..."));
-
-            // Extract audio for this segment
-            var segmentAudio = AudioFileLoader.ExtractSegment(audioPcm16, segment.Start, segment.End);
-            
-            if (segmentAudio.Length < 1600) // Less than 0.1 sec at 16kHz
+            // Phase 2: Initialize diarizer if needed
+            if (!_diarizer.IsInitialized)
             {
+                progress?.Report((12, "Initierar talarmodell..."));
+                _diarizer.Initialize(numThreads);
+            }
+
+            // Phase 3: Run diarization (10-40%)
+            progress?.Report((15, "Identifierar talare..."));
+            
+            // Note: Sherpa-ONNX process is a black box for progress.
+            // We use a fake internal progress to satisfy the user's desire for movement.
+            var diarizationTask = _diarizer.DiarizeAsync(
+                audioFloat, 
+                expectedSpeakers, 
+                null, 
+                ct);
+
+            // While diarization is running, we fake some progress movement from 15 to 35
+            int fakeProgress = 15;
+            while (!diarizationTask.IsCompleted)
+            {
+                if (fakeProgress < 35)
+                {
+                    fakeProgress++;
+                    progress?.Report((fakeProgress, "Identifierar talare..."));
+                }
+                await Task.WhenAny(diarizationTask, Task.Delay(500, ct));
+                ct.ThrowIfCancellationRequested();
+            }
+
+            var segments = await diarizationTask;
+
+            if (segments.Count == 0)
+            {
+                progress?.Report((100, "Inga talare hittades"));
+                return "[Inga talare hittades i inspelningen]";
+            }
+
+            // Phase 4: Transcribe each segment (40-95%)
+            progress?.Report((40, $"Transkriberar {segments.Count} segment..."));
+            
+            var transcribedSegments = new List<DiarizationSegment>();
+            int segmentIndex = 0;
+            
+            foreach (var segment in segments)
+            {
+                ct.ThrowIfCancellationRequested();
+                
+                int percent = 40 + (int)(55.0 * segmentIndex / segments.Count);
+                progress?.Report((percent, $"Transkriberar segment {segmentIndex + 1}/{segments.Count}..."));
+
+                // Extract audio for this segment
+                var segmentAudio = AudioFileLoader.ExtractSegment(audioPcm16, segment.Start, segment.End);
+                
+                if (segmentAudio.Length < 1600) // Less than 0.1 sec at 16kHz
+                {
+                    segmentIndex++;
+                    continue;
+                }
+
+                // Transcribe with Whisper
+                string text = await _whisper.TranscribeAsync(segmentAudio, AudioFileLoader.TargetSampleRate);
+                
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    transcribedSegments.Add(segment.WithText(text.Trim()));
+                }
+
                 segmentIndex++;
-                continue;
             }
 
-            // Transcribe with Whisper
-            string text = await _whisper.TranscribeAsync(segmentAudio, AudioFileLoader.TargetSampleRate);
+            // Phase 5: Format output (95-100%)
+            progress?.Report((95, "Formaterar resultat..."));
+            string result = FormatOutput(transcribedSegments);
             
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                transcribedSegments.Add(segment.WithText(text.Trim()));
-            }
-
-            segmentIndex++;
+            progress?.Report((100, "Klart!"));
+            return result;
         }
-
-        // Phase 5: Format output (95-100%)
-        progress?.Report((95, "Formaterar resultat..."));
-        string result = FormatOutput(transcribedSegments);
-        
-        progress?.Report((100, "Klart!"));
-        return result;
+        finally
+        {
+            // Restore original priority
+            try { Process.GetCurrentProcess().PriorityClass = originalPriority; } catch { }
+        }
     }
 
     private static string FormatOutput(List<DiarizationSegment> segments)
