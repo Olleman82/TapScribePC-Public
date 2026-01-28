@@ -20,4 +20,10 @@ public sealed class PromptDefinition
     public bool GeminiUseGrounding { get; set; }
     public string OpenAiModel { get; set; } = "gpt-5-mini";
     public string OpenAiReasoningEffort { get; set; } = "minimal";
+    
+    // Webhook settings
+    public bool SendToWebhook { get; set; }
+    public string WebhookUrl { get; set; } = "";
+    public string WebhookToken { get; set; } = "";
+    public bool SendRawText { get; set; }
 }

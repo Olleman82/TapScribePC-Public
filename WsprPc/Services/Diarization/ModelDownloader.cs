@@ -17,18 +17,18 @@ public class ModelDownloader
     // Sherpa-ONNX speaker segmentation model
     // URL source: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
     private const string SegmentationModelUrl = 
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-reverb-diarization-v1.tar.bz2";
     
     // Sherpa-ONNX speaker embedding model
     // URL source: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
     private const string EmbeddingModelUrl = 
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/nemo_en_titanet_large.onnx";
     
     private readonly string _modelsDir;
     
-    // The tarball extracts a folder "sherpa-onnx-pyannote-segmentation-3-0", inside is "model.onnx"
-    public string SegmentationModelPath => Path.Combine(_modelsDir, "sherpa-onnx-pyannote-segmentation-3-0", "model.onnx");
-    public string EmbeddingModelPath => Path.Combine(_modelsDir, "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx");
+    // The tarball extracts a folder "sherpa-onnx-reverb-diarization-v1", inside is "model.onnx"
+    public string SegmentationModelPath => Path.Combine(_modelsDir, "sherpa-onnx-reverb-diarization-v1", "model.onnx");
+    public string EmbeddingModelPath => Path.Combine(_modelsDir, "nemo_en_titanet_large.onnx");
     
     public bool ModelsExist => 
         File.Exists(SegmentationModelPath) && 

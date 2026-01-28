@@ -23,13 +23,38 @@ public sealed class SherpaDiarizationService : IDisposable
 
     private bool _disposed;
 
+    /// <summary>
+    /// Force a specific number of speaker clusters.
+    /// -1 = auto-detect (default), positive value = forced cluster count.
+    /// Must be set BEFORE calling Initialize().
+    /// </summary>
+    public int ForcedNumClusters { get; set; } = -1;
+
     public SherpaDiarizationService(string segmentationModelPath, string embeddingModelPath)
     {
         _segmentationModelPath = segmentationModelPath;
         _embeddingModelPath = embeddingModelPath;
     }
 
+    public string EmbeddingModelPath => _embeddingModelPath;
+
     public bool IsInitialized => _diarizer != null;
+
+    /// <summary>
+    /// Clustering threshold (default 0.5). Higher = fewer clusters (more merging).
+    /// </summary>
+    public float ClusteringThreshold { get; set; } = 0.6f;
+
+    /// <summary>
+    /// Ignore speech segments shorter than this (seconds). Default 0.3.
+    /// </summary>
+    public float MinDurationOn { get; set; } = 0.15f;
+
+    /// <summary>
+    /// Merge same-speaker segments with gap shorter than this (seconds). Default 0.5.
+    /// Increasing this helps merge fragmented speech.
+    /// </summary>
+    public float MinDurationOff { get; set; } = 0.1f;
 
     public void Initialize(int numThreads = 1)
     {
@@ -50,10 +75,14 @@ public sealed class SherpaDiarizationService : IDisposable
             config.Segmentation.NumThreads = _numThreads;
             config.Embedding.Model = _embeddingModelPath;
             config.Embedding.NumThreads = _numThreads;
-            config.Clustering.NumClusters = -1; // Auto identify number of speakers
-            config.Clustering.Threshold = 0.5f; // Threshold for clustering
-            config.MinDurationOn = 0.2f;
-            config.MinDurationOff = 0.5f;
+            config.Clustering.NumClusters = ForcedNumClusters; // -1 = auto, positive = forced
+            config.Clustering.Threshold = ClusteringThreshold;
+            config.MinDurationOn = MinDurationOn;
+            config.MinDurationOff = MinDurationOff;
+            
+            Console.WriteLine($"[SHERPA] Segmentation Model: {_segmentationModelPath}");
+            Console.WriteLine($"[SHERPA] Embedding Model: {_embeddingModelPath}");
+            Console.WriteLine($"[SHERPA] NumClusters={ForcedNumClusters}, Threshold={ClusteringThreshold:F2}, MinOn={MinDurationOn:F2}, MinOff={MinDurationOff:F2}");
 
             _diarizer = new OfflineSpeakerDiarization(config);
         }
@@ -76,29 +105,11 @@ public sealed class SherpaDiarizationService : IDisposable
             if (_diarizer == null)
                 throw new InvalidOperationException("Call Initialize() first");
 
-            // If user specified exact speaker count, we must re-initialize the diarizer with new config
-            // since NumClusters is part of the initial configuration.
-            if (expectedSpeakers.HasValue && expectedSpeakers.Value > 0)
-            {
-                var config = new OfflineSpeakerDiarizationConfig();
-                config.Segmentation.Pyannote.Model = _segmentationModelPath;
-                config.Segmentation.NumThreads = _numThreads;
-                config.Embedding.Model = _embeddingModelPath;
-                config.Embedding.NumThreads = _numThreads;
-                config.Clustering.NumClusters = expectedSpeakers.Value;
-                config.Clustering.Threshold = 0.5f; 
-                config.MinDurationOn = 0.2f;
-                config.MinDurationOff = 0.5f;
-
-                // We don't want to leak the old one if we re-init
-                _diarizer?.Dispose();
-                _diarizer = new OfflineSpeakerDiarization(config);
-            }
-
             progress?.Report(10);
 
-            // Process audio
-            // Sherpa-Onnx C# API Process(float[]) returns OfflineSpeakerDiarizationSegment[]
+            // Process audio directly (Sherpa-ONNX 1.12.22 handles long files correctly)
+            Console.WriteLine($"[SHERPA] Processing {audio16kMono.Length / 16000.0f / 60:F1} minutes of audio...");
+            
             OfflineSpeakerDiarizationSegment[]? resultLines = null;
             try 
             {
@@ -117,7 +128,6 @@ public sealed class SherpaDiarizationService : IDisposable
             {
                 foreach (var seg in resultLines)
                 {
-                     // seg has .Start, .End, .Speaker
                      segments.Add(new DiarizationSegment(
                          SpeakerId: seg.Speaker,
                          Start: TimeSpan.FromSeconds(seg.Start),
@@ -130,16 +140,6 @@ public sealed class SherpaDiarizationService : IDisposable
 
             return segments;
         }, ct);
-    }
-
-    public static float[] ConvertPcm16ToFloat(short[] pcm16)
-    {
-        var floatSamples = new float[pcm16.Length];
-        for (int i = 0; i < pcm16.Length; i++)
-        {
-            floatSamples[i] = pcm16[i] / 32768f;
-        }
-        return floatSamples;
     }
 
     public void Dispose()

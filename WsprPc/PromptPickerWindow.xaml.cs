@@ -10,6 +10,10 @@ public partial class PromptPickerWindow : Window
 {
     public PromptDefinition? SelectedPrompt { get; private set; }
 
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(System.IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
     public PromptPickerWindow(IEnumerable<PromptDefinition> prompts)
     {
         InitializeComponent();
@@ -33,6 +37,7 @@ public partial class PromptPickerWindow : Window
 
         Loaded += (_, _) =>
         {
+            ApplyDarkMode();
             Activate();
             Topmost = true;
             Focus();
@@ -47,6 +52,13 @@ public partial class PromptPickerWindow : Window
                 DialogResult = true;
             }
         };
+    }
+
+    private void ApplyDarkMode()
+    {
+        var interopHelper = new System.Windows.Interop.WindowInteropHelper(this);
+        int useDarkMode = 1;
+        DwmSetWindowAttribute(interopHelper.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
     }
 
     private void PromptListBox_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)

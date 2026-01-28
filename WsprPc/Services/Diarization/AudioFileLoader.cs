@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using NAudio.Wave;
+using WsprPc.Services.Diarization;
 
 namespace WsprPc.Services.Diarization;
 
@@ -29,7 +31,77 @@ public static class AudioFileLoader
     public static async Task<float[]> LoadAsFloatAsync(string filePath, CancellationToken ct = default)
     {
         var pcm16 = await LoadAsync(filePath, ct);
-        return SherpaDiarizationService.ConvertPcm16ToFloat(pcm16);
+        return ConvertPcm16ToFloat(pcm16);
+    }
+
+    /// <summary>
+    /// Load an audio file with high-quality FFmpeg normalization and convert to 16kHz mono float samples.
+    /// Fallback to NAudio if FFmpeg is not available.
+    /// </summary>
+    public static async Task<float[]> LoadNormalizedAsFloatAsync(string filePath, string? ffmpegPath, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(ffmpegPath) || !File.Exists(ffmpegPath))
+        {
+            return await LoadAsFloatAsync(filePath, ct);
+        }
+
+        string tempOut = Path.Combine(Path.GetTempPath(), $"norm_{Guid.NewGuid()}.wav");
+        try 
+        {
+            bool success = await CreateNormalizedVersion(filePath, tempOut, ffmpegPath, ct);
+            if (!success) return await LoadAsFloatAsync(filePath, ct);
+
+            return await LoadAsFloatAsync(tempOut, ct);
+        }
+        finally
+        {
+            try { if (File.Exists(tempOut)) File.Delete(tempOut); } catch { }
+        }
+    }
+
+    private static async Task<bool> CreateNormalizedVersion(string input, string output, string ffmpegPath, CancellationToken ct)
+    {
+        // EBU R128 loudness normalization + high-pass 80Hz + low-pass 7800Hz
+        string ffmpegArgs = $"-i \"{input}\" -af \"highpass=f=80,lowpass=f=7800,loudnorm=I=-18:LRA=11:TP=-2\" -ar 16000 -ac 1 \"{output}\" -y";
+        
+        var psi = new ProcessStartInfo
+        {
+            FileName = ffmpegPath,
+            Arguments = ffmpegArgs,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        try
+        {
+            using var proc = Process.Start(psi);
+            if (proc == null) return false;
+
+            // CRITICAL: Drain stdout/stderr to prevent buffer deadlock
+            // FFmpeg writes verbose output to stderr; if buffer fills, it blocks forever
+            var stderrTask = proc.StandardError.ReadToEndAsync(ct);
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync(ct);
+            
+            await Task.WhenAll(stderrTask, stdoutTask);
+            await proc.WaitForExitAsync(ct);
+            return proc.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static float[] ConvertPcm16ToFloat(short[] pcm16)
+    {
+        var floatSamples = new float[pcm16.Length];
+        for (int i = 0; i < pcm16.Length; i++)
+        {
+            floatSamples[i] = pcm16[i] / 32768f;
+        }
+        return floatSamples;
     }
 
     private static short[] Load(string filePath)

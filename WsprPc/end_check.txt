@@ -1,0 +1,21 @@
+        {
+            try
+            {
+                File.WriteAllText(dialog.FileName, text);
+                _trayIcon?.ShowBalloon("TapScribe PC", $"Sparad till {Path.GetFileName(dialog.FileName)}");
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error("Failed to save transcription", ex);
+                WpfMessageBox.Show($"Kunde inte spara filen: {ex.Message}", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private double ReadDoubleOrFallback(System.Windows.Controls.TextBox box, double fallback, string label)
+    {
+        if (double.TryParse(box.Text.Replace(',', '.'), CultureInfo.InvariantCulture, out var val)) return val;
+        return fallback;
+    }
+    #endregion
+}

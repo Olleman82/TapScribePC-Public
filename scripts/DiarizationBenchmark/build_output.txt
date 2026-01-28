@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored D:\Appar\wspr-pc\scripts\DiarizationBenchmark\DiarizationBenchmark.csproj (in 2,3 sec).
+  1 of 2 projects are up-to-date for restore.
+  WsprPc -> D:\Appar\wspr-pc\WsprPc\bin\Release\net8.0-windows\win-x64\TapScribe.dll
+  DiarizationBenchmark -> D:\Appar\wspr-pc\scripts\DiarizationBenchmark\bin\Release\net8.0-windows\win-x64\DiarizationBenchmark.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:50.09

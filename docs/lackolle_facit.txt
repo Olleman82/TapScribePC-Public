@@ -1,0 +1,482 @@
+Talare 2 - 0:07
+Så här ser den ut. Då har vi ett blad för varje maskin. Och så lägger vi då in i vilken maskin det ska köras, när det ska startas, vad vi har för leveransdatum på det. vilken order det är, vilken kund det är. Sen ska man också skriva in en beskrivning. Och hur lång tid det förväntas ta. Och om det är något efterarbete.
+
+Talare 1 - 0:40
+Ja just det.
+
+Talare 2 - 0:41
+Men det har varit så tungt jobbat så de som har jobbat med det har inte orkat göra det. Det har bara blivit en lista på jobb och då kan du lika gärna gå ut i hyllan och kolla vad det finns för jobb.
+
+Talare 1 - 0:54
+Ja precis, det blir som den gamla krokodilen.
+
+Talare 2 - 0:58
+Ja, precis. Och så är det samma för övriga maskiner.
+
+Talare 3 - 1:09
+Jag funderar på, ska vi bara ta en snabb bakgrund kring till mötet och varför den här konstellationen? Jag tänker att det kanske kan vara gott för Mats att höra om inte annat. Eller ni kanske redan har pratat om det här så att det är liksom koll på läget redan?
+
+Talare 1 - 1:23
+Ja, inte direkt. Men jag har ju haft flera sådana här UIC-case. Och det har ju varit just för produktionsplanering i regel.
+
+Talare 3 - 1:34
+Just det, precis. Ja, men då känner du till vår typ av verksamhet.
+
+Talare 1 - 1:37
+Vad vi är för part i det här mötet så att säga Ja precis Så att det har ju varit Nu var det några år sedan dock men Det är några stycken som jag jobbat med de här just Inom, ja det har nog varit Just planeringsbiten i de flesta fall. Okej. Faktiskt. Jajamen.
+
+Talare 3 - 1:59
+Och vi bara för att förtydliga iallafall. Vi är ju inte riktigt någon utförare utan Vi är ju en offentligt finansierad verksamhet. verksamhet till största delen och hjälper just producerande företag med egentligen allt möjligt inom utvecklingsarbete, produktionseffektivisering och så vidare. Så att i den här typen av case brukar vi kunna fungera som ett bollplank, en rådgivare. Vi rekommenderar inte några specifika system eller någonting. Ibland kan vi hjälpa till med att söka en del finansiering om det visar sig att man kommer behöva göra någon större utveckling. satsning och så vidare för ett visst system eller integrera ett system eller sådär. Och det här är väl lite startskottet på den diskussionen vi hade precis före jul kring behov och kring just produktionsplaneringen.
+
+Talare 1 - 2:53
+Yes.
+
+Talare 3 - 2:57
+Kändes det okej, Rickard? Eller vill du lägga till något? Eller har du sagt något som inte känns?
+
+Talare 2 - 3:01
+Ja, det känns jättebra. Nej, nej, då har jag förklarat lite. Jag vet ju att det finns en produktionsplanering i Garp, men den kan ju inte jag någonting.
+
+Talare 1 - 3:15
+Nej.
+
+Talare 2 - 3:16
+Så då tänker jag att Mats, det kan ju du.
+
+Talare 1 - 3:19
+Ja, så det är ju klart, det är ju ett enkelt steg för att bara utvärdera om man tror att det kan funka för det. Det går ju rätt fort att bara dra upp några exempel baserat på era befintliga order och maskiner. För det är ju det man behöver lägga upp. Det är ju maskinerna och de som är resurser och sen så de operationer som ska göras. Jag vet inte om det är någonting som är standardoperationer. I sådana fall blir det ju jätteenkelt för då är det ju bara att lägga upp det och knyta det till artikeln. artikeln och så blir det en operation och då kommer den ju dyka upp i arbetskön och i Gant schemat då över jobben som är inplanerade.
+
+Talare 2 - 4:04
+Det finns ju några olika steg  när vi tillverkar specialverktyg som det tar. omslipning är ju ännu enklare. Om man har någonting, om vi tar ett specialverktyg, och så ska det in i flera maskiner. Är det ett bekymmer eller går det enkelt att blanda?
+
+Talare 1 - 4:30
+Det är ju en operationslista, så då har du flera operationer som den planerar efter varandra. Så det är ju inget bekymmer. Sen kan det ju finnas problematiker med olika saker, vilka turordningar de ska gå i förhållande till andra order och sådär då. Att man behöver planera om och sånt då. Men i det enkla fallet om man tar det som den själv föreslår så gör den ju liksom allting själv. Då planerar den in det då när det finns tid.
+
+Talare 2 - 5:07
+Och då kan man sätta olika tider. Om vi säger att man har en position för rundslipning. Och så kan jag sätta den som olika tid på olika ordrar. Eller hur?
+
+Talare 1 - 5:20
+Ja. I den bästa fall så är det ju att det går att redan när du lägger ordern så slår det liksom igenom på operationen då. Normalt sett är det ett antal som den räknar med då. Men det går ju skriva in vilken tid man vill då. Både om du nu har ställtider och operationstider. Är det enstaka verktyg så blir det ju då blir det egentligen, ja då är det ju bara en.
+
+Talare 3 - 5:54
+Arbetar du enbart med Garp eller hjälper du till med flera olika produktionssystem?
+
+Talare 1 - 5:59
+Nej, vi hjälper bara till med Garp, för det är det enda vi egentligen kan. Sen finns det även integrerade lösningar till Garps produktionslösningar. Man vill sitta och dra i staplar och sånt. Men då hamnar man på helt andra nivåer.
+
+Talare 3 - 6:21
+Kan du säga, jag förstår att du sitter lite grann mitt i båten för Garp, men jag ställer ändå bara en väldigt öppen fråga. Hur kapabel tycker du att produktionsplaneringsmodulen i Garp är? För ett mindre bolag med lite ställtidsbehov och lite enstycksbehov och lite visualisering av läget och sådär.
+
+Talare 1 - 6:43
+De flesta som kör GARP har köpt det för att det finns så pass mycket i det. Man har både materialplanering, i grunden är det ett MPS-system. Det har rötter från 70-talet när de startade upp GARP-bolaget som hette mikrokraft på den tiden. Då var det inom produktion. De som har produktion kör i regel de här delarna. Sen hur det är i förhållande till andra det vet jag faktiskt inte.
+
+Talare 3 - 7:16
+Nej, och det kan man ju inte gärna begära höll jag på att säga också. Du får ursäkta min okunskap men vi springer på så oerhört mycket företag som jobbar med monitor Så det är inte så jättevanligt att vi faktiskt springer på just Garp. Det förekommer men inte så ofta så därför har jag inte så jättemycket insyn för egen del.
+
+Talare 1 - 7:32
+Nej det är ju olika delar av Sverige kan man säga då. Beroende på men monitor är ju jättestora.
+
+Talare 3 - 7:39
+Var är Garp som störst?
+
+Talare 1 - 7:41
+Ja det är väl i Boråstrakten kan man säga. För det kommer därifrån och sen finns det ju rätt mycket system neråt Småland och så. Jag vet inte hur många som är tillverkande då men Det finns ju mellan 500 och 600 installationer då. Det säger inte så mycket hur många bolag som kör men så många installationer tror jag det är. Och jag skulle tippa att hälften är nog producerande bolag då. Och många ur. kört garp väldigt länge.
+
+Talare 2 - 8:16
+Om vi ska använda MPSL, är det någonting vi behöver lägga till på licens då  eller innehar vi redan det?
+
+Talare 1 - 8:21
+Ni har allt. Så det är egentligen bara att börja göra jobbet. Vill ni testa och se, få en känsla för vad som går att göra, så går det ju väldigt fort. Det går ju bra.
+
+Talare 2 - 8:36
+Kan du visa lite hur det fungerar?
+
+Talare 1 - 8:40
+Ja, inte just nu för då behöver jag få upp lite data här. Men jag kan göra det egentligen i ert eget system om du skulle vilja det. Då kan jag lägga upp, så att bara jag får upp, om jag får Jag får en liten lista med maskiner, för vi kan göra det i testsystemet om du vill. Så att jag får en lista med de maskiner som ni planerar och hur mycket tid ni går på. Alltså hur mycket tid ni har per dygn som ni kör dem. Och sen lite beläggningsfaktorer om det spelar roll. Inte för test kanske. Och sen så någon order eller några order som vi skulle kunna lägga in tider på operationer. Så att om jag tankar dig på lite mer info så skulle jag nog kunna på ja det tar kanske en timme för mig att sätta upp det så att det går att se, få en känsla för det då.
+
+Talare 2 - 9:31
+Jo men det hade varit intressant att se hur det skulle se ut och hur det skulle funka om man får en bild för det. Absolut. Jag ska skriva ner här.
+
+Talare 3 - 9:48
+Hur var det idag Richard? Jag är lite svajig med minnet från december, men hur ser det ut med indata för eran del? Alltså operationstider och ställtider och sånt där. För det är klart att det grundar sig ju i slutändan på att man har någon data att beräkna utifrån.
+
+Talare 2 - 10:08
+Vi får ju en del saker ifrån CAD-systemet när vi ritar. Då får vi ju operationstid för. rundslip, för slipning, profilslipning och för frislipning. Det är egentligen de tre stegen som vi gör i maskin.
+
+Talare 1 - 10:32
+Är det i en maskin eller i flera maskiner?
+
+Talare 2 - 10:36
+Det kan vara i olika maskiner. Det beror på hur det jobbet ser ut. Men då får ju vi helt enkelt när vi gör jobbet specifika upp det. Att det här är maskintid för bearbetning på rundslip i den maskinen. Det här är maskintid för slipning i den maskinen. Eller om det är kombinerat så får man skriva det som om man är både och i en maskin.
+
+Talare 1 - 11:07
+Det har ju mest att göra med hur smidigt det är när man lägger upp order. För ju mer man har färdigt som en lista då. Det är ju två moment om du går över två maskiner, men det kan ju vara ett moment om du går i en maskin i alla fall, det är två saker man gör då.
+
+Talare 2 - 11:24
+Precis, precis.
+
+Talare 1 - 11:26
+Eller så är det två moment och så knyts den till samma.
+
+Talare 2 - 11:29
+Ja, ja, men är det så att det är två moment men man kör dem i samma maskin, då tänker ju jag att då kanske man skriver det som ett moment. Eller ska man ändå skriva det som två moment?
+
+Talare 1 - 11:42
+Ja det beror lite grann på. Det blir ju renare om man kan skriva det som ett moment eftersom då blir det ju så att säga en stapel om man ändå kör dem som ett moment då. Men det kan ju hända att man vill se dem som två då. Och då är de ju fristående då. De kommer ju alltid behöva ligga ihop då eftersom de går ju efter varandra. En del sådana här saker är sådant som ger sig men det är svårt att säga i startläge.
+
+Talare 2 - 12:09
+Jag förstår lite läget. Om jag går från grunden med de olika stegen vi har i vår produktion. Först så skriver man i orden men det behöver vi inte planera för. Sen plockas ämne ut. Sen har vi kapning.
+
+Talare 1 - 12:34
+Och det är ju ett moment då antar jag.
+
+Talare 2 - 12:37
+Ja. Sen har vi rundslip, profilslip, sen har vi frigångsslipning. Sen har vi utlejda processer, men de misstänker jag att vi har med här också.
+
+Talare 1 - 13:01
+Ja, det blir från lego.
+
+Talare 1 - 13:09
+Och då går det ut ur huset eller? Ja.
+
+Talare 2 - 13:16
+Den ena finns ju faktiskt både och, då kanske man ska ha dem som olika.
+
+Talare 1 - 13:23
+Ja, ifall ni gör det själva eller om ni lämnar ut det eller?
+
+Talare 2 - 13:28
+Ja, jag skriver då äggprev extern och äggprev intern.
+
+Talare 1 - 13:40
+Vad är det som avgör när det är internt och externt? Är det tid eller typ av.?
+
+Talare 2 - 13:44
+Det är typen av produkt, hur avancerad den är. Vi har ganska enkla metoder för att göra detta. Så om det är ett enkelt borr eller liknande, då kan vi göra det själva. Krävs det mer noggrannhet eller är det en avancerad produkt, då skickar vi det till extern leverantör som har styrda maskiner för det. Vi gör det manuellt.
+
+Talare 2 - 14:11
+Paketering, ska man ha med det som en punkt?
+
+Talare 1 - 14:15
+Alltså, det hänger ju lite grann ihop. Det kan ju vara. praktiskt för att man vet att man är färdig. Men man får ju komma ihåg att ska man lägger man upp och drar igång detta så ska det också rapporteras på ett eller annat sätt. I alla fall i våra lägen. Det beror lite grann på var man lägger ribban.
+
+Talare 2 - 14:36
+Vi kanske inte börjar med det.
+
+Talare 1 - 14:39
+Nej, annars är det ju rätt praktiskt. Då kan man ju se alla som är på väg ut. Och så försvinner de ju. operationer allt eftersom.
+
+Talare 3 - 14:51
+Jag tänker att det finns lite olika behov här. Ett behov är att man får ett väldigt bra kalkylunderlag. Ett annat behov är att kunna få en efterkalkyl och kunna ha koll på vart är man i sin produktionsprocess just nu. Det kan ju vara så att utifrån ett kalkylbehov så är det rätt intressant att till exempel kunna ha koll på att packning tar så här eller så här lång tid. Det kan ju vara olika emballage som gör att det tar olika lång tid. Men samtidigt så vill man inte ha det för avancerat vad gäller att man ska återkoppla allt ut i produktionen. Kan man liksom lägga upp operationer som att de i princip bara går att hoppa över eller att på något sätt inte göra det för omständigt för de som arbetar med det. Men samtidigt behålla den här detaljrikedomen för sina kalkylunderlag.
+
+Talare 1 - 15:40
+Ja absolut, du kan ju låta, om du rapporterar en senare operation så drar den de tidigare enligt förkalkylen. kalkylen. Det är det enklaste sättet. En del planerar inte. Det är väl ofta så att det finns några saker som är trånga sektorer och andra kan vara sånt man bara vill veta om det har gått igenom. De trånga sektorerna är de som man kanske lägger mer krut på att planera och följa upp. Men med all produktionsplanering, om man vill få efterkalkyler, så är det klart att då hänger det ihop med hur mycket man rapporterar. om det håller de tiderna som man har räknat med. I en del branscher stämmer alltid förkalkylerna. Hos andra kan det variera enormt mycket. Då har man lite olika behov av rapporteringen.
+
+Talare 2 - 16:37
+Ja precis. Det skulle vara intressant för oss att se. Om våra kalkyler stämmer. För där har inte vi gjort så mycket efterkalkyler än. Det är något vi skulle behöva göra.
+
+Talare 1 - 16:48
+Det finns också olika sätt att jobba. Det ena är att man har  realtidsstämpling, så man stämplar in sig på ett jobb och stämplar ut sig. Men sen kan det ju också vara att man gör sån här efterhandsrapportering då, när man talar om att det tog två timmar eller någonting då. Och det är klart, snyggast är ju min och utstämplingar, men det är ju också sånt som kan ta tid.
+
+Talare 2 - 17:08
+Jag tror det bästa i vårat fall är att man skriver in efteråt, att det tog så här lång tid.
+
+Talare 3 - 17:17
+Jag tror också det är viktigt. Det ska vara genomförbart för de som ska göra det också så att säga och inte upplevas som en jättedålaga.
+
+Talare 2 - 17:28
+I och med att en operatör kan gå igenom alltifrån ett jobb till fem jobb på en dag. Ska de stämpla in och stämpla ut hela tiden så tror jag då kommer det bli en flaskhals där som tar lite tid för oss.
+
+Talare 1 - 17:41
+Ja, och det kan också bli en irritation. Och sen är det ju så att vissa saker kan funka om det liksom kommer. successivt, men lägger man upp ribban högt och de känner att det blir massa administration, så blir det bara motstånd. Men gör man det stegvis och kommer igång så kan sådana här moment som att stämpla in och ut, helt plötsligt så är det ingenting utan man.
+
+Talare 2 - 18:06
+Absolut.
+
+Talare 1 - 18:07
+Man är så snabb om man gör det på vissa moment och andra så dras de enligt förkalkyl och beroende på vad man vill följa upp.
+
+Talare 2 - 18:15
+Ja, precis. Och vad alla skulle fråga. Jo, ställtid, är det någonting man ska ha med, riggning av jobben?
+
+Talare 1 - 18:25
+Det är också olika. En del lägger det som separata operationer ifall riggningen tar lång tid om man följer upp det. Annars så går det ju liksom lägga det i samma operation och så ska man veta att det är en riggning och få upp den tiden så måste man stämpla ur sig på den tiden och tala om riggtiden. Men en operation så består den utav både ställtiden och avslutstiden.
+
+Talare 2 - 18:55
+jobb vi gör, då behöver vi byta chock kallas det ju maskin där man spänner fast detaljer. Då vet ju vi att det här kommer det bli ställtid. Kan man ha med det då bara på vissa jobb?
+
+Talare 1 - 19:11
+Ja, absolut. En sak är hur man ser på det, om man vill förkalkylera i Garp, för det går ju också, så kan man ju ha olika operationslistor för det. Men ur en kalkylsynvinkel så kan det ju vara bra att räkna med att man alltid byter verktyget. Även om man i praktiken kanske inte gör det. Då kanske man planerar in för att slippa byta, om det nu är någon form av, det kanske det är unika verktyg för. Och då blir det i sådana fall ett, om vi kallar det vinst för att man planerar bra och inte behöver byta så mycket i maskiner. Men sen när du kör det kan det ju vara att det inte blir någon ställtid för vi lägger de här två jobben efter varandra.
+
+Talare 2 - 19:55
+Ja precis, men det är ju Helst skulle man vilja, för 90-95% använder vi samma sjuk till alla jobb. Men så har vi 5-10% där vi behöver byta sjuk. Helst vill man att de går ut och kollar, har vi något mer jobb som kräver den här sjuken? Om de redan har bytt till den stora. Då vill man att de går ut och kollar, har jag något mer med denna sjuken? Det händer ju inte alltid. Så i de jobben måste vi ju planera att det blir en ställning varje gång.
+
+Talare 1 - 20:27
+Ja, precis. Och ur ett kostnadsperspektiv kan det ju vara bra att räkna med det. Alltså gentemot kund då, att man utgår från att man får byta chock. Vad tar det att byta en chock i tid?
+
+Talare 2 - 20:43
+Beror på vem som gör det. Är det en erfaren operatör så tar det, ska de sätta in, den värsta utav dem, då tar den erfaren en halvtimme. Icke erfaren två timmar.
+
+Talare 1 - 20:57
+Oj, det är sån skillnad. Hur långa är jobben normalt sett? Om det finns någon slags typiskt.
+
+Talare 2 - 21:08
+Nej, det kan vara allt ifrån Två timmar till två veckor. Är det enstyckes tillverkning så försöker man undvika den chucken. Då försöker man ta standardchucken. Men ibland måste man för det är ett långt verktyg och det går inte att tillverka på annat sätt. Så måste man byta till den chucken. Är det att vi ska köra samma detalj i två veckor, att det är 1000 detaljer, då är det inga bekymmer att byta på 2 timmar.
+
+Talare 1 - 21:41
+Nej precis, det slås ut på många.
+
+Talare 2 - 21:46
+Så det är lite olika faktiskt.
+
+Talare 1 - 21:50
+Grunden i själva produktionsdelen är ju förkalkylen kan man ju säga. I den bästa av världar så har man ju en operationslista till varje artikel. Eller knyter ihop en liknande till de som är likadana såklart. Och så kan man köra på dem och då är det ju inte så mycket jobb att sätta upp det.
+
+Talare 2 - 22:13
+Kan man göra den förkalkylen eller sätta ihop den här produktionsplaneringen när man lägger upp?
+
+Talare 1 - 22:20
+Ja, du kopplar ju så att säga, om du har ett ämne så har du kopplat det till artikeln plus de operationer som, eller den operationslista som du normalt sett använder och då har du din förkalkyl. Har du lagt in tider på maskinerna och dina kostpriser på din maskintid och din man-tid så får du Då får du en förkalkyl. Då får du ett pris. Sen är det förkalkylen du använder när du planerar in den.
+
+Talare 1 - 23:02
+Har du några typiska artiklar så kan man lägga upp de operationslistorna där. Man behöver inte vara så noga första gången man gör det, bara så man ser hur det kommer upp. Sen kan man ha det som diskussionsunderlag och se om man ska göra som det du pratade om. Hur gör man med ställtider och liknande. Där laddade du mycket i andra frågeställningar som man kanske inte funderar på. Det är ju det här med vad kostar en maskintimme och vad kostar en mantimme och hur ska man räkna och vad ska man räkna in. Vill man ha med overhead eller inte.
+
+Talare 2 - 23:40
+Nu kommer jag inte ihåg exakt vad det var för minuttid idag. Men vi har tagit fram den här pengen som vi behöver ha i timmen om vi ska använda våra maskiner. och då är det ju med dieselkostnad, personalkostnad, el, förbrukning, slitage, allt det här. Den kalkylen har vi ju tagit fram. Jag tror det är 24,58 i minuten. För det är ju så vi använder, när vi ska räkna ut pris på en artikel idag, då gör vi en uppskattning av hur lång tid det kommer att ta att tillverka ett sådant här verktyg. Och så gångar vi till med minutpriset och materialpris och efterarbetning, kostnad för det. Så det har vi ju. Så det kan vi lägga in.
+
+Talare 1 - 24:36
+Ja, för det är bra ju mer man har från början desto snabbare går det på någonting som man känner igen.
+
+Talare 2 - 24:43
+Ja, precis.
+
+Talare 2 - 24:52
+Då ska jag ta med
+
+Talare 2 - 25:01
+Jag har skrivit att jag ska ta fram några verktyg och så stryker jag ner dem och skickar vilka operationer det är och hur lång tid det tar. Eller beräknat. Hur gör man? Jag tänker som en process av beläggning. Det är ju en extern process. Och beroende på vilken typ av beläggning så tar det olika x antal dagar.
+
+Talare 1 - 25:42
+Dina minuter kommer omvandlas till en beläggning i timmar kanske. Det beläggs på den resursen som vi har knutit den operationen till. Och så blir det ju som ett Gant-schema där alla de här jobben ligger. Så du har dels en arbetskö där du ser alla jobben som ska utföras. Totalt eller per maskin. Sen har du ett Gant-schema där du ser alla staplarna som ligger ner bortåt i horisonten. Man kan se hur lång tid en maskin är belagd. Därifrån kan man också rapportera om man vill direkt från Ganten. Normalt sett jobbar operatörerna i köbyarna där de plockar ut sin order. Gör man det i efterhand så kanske man har skrivit ut dem på ett eller annat sätt. Jag vet inte. Då kommer man ju bara gå in och rapportera av, leta upp sin order och rapportera av den då.
+
+Talare 3 - 26:45
+Men Rickard, jag förstod det som att du frågade om just externa jobb. Men jag kanske missförstod där. Jag tänker att om det är ett externt jobb som ska göras så skulle man ju också kunna lägga upp det som köp av tjänst om man säger så.
+
+Talare 1 - 27:00
+I sådana fall får man ju lägga, där är ju själva kapaciteten, då får man ju lägga typ en fast tid på det nästan så att den räknar med någon form av typisk leveranstid då. Man har ju inte beläggningen hos en underleverantör, men den är ju också betraktad som en resurs. Men man gör ju en så kallad bruttoplanering då, så man utgår från att de har kapaciteten där man lägger in det. Eller där den hamnar. Sen kan det ju i praktiken vara att de inte har det. Nej, man får räkna med det. Vissa saker är också så att man har kanske en känsla för vad man behöver för om man lägger in lite extra kötider för att skapa sig lite slack emellan vissa operationer om det nu ska iväg. Ska det iväg så kanske det ska packas och det ska gå iväg. Kanske det går några dagar bara i hantering runt omkring..
+
+Talare 2 - 28:01
+Ja men det är bra, då kan man lägga in det för det kommer ju behövas på beläggning. För den kan ju vi skicka på måndag. Och så får vi tillbaka det på onsdagen till exempel om det är en beläggning. Och är det en annan typ av beläggning som bara görs på fredagar. Ja då skickar vi på måndag och så får vi tillbaka det nästkommande måndag.
+
+Talare 1 - 28:22
+Ja just det.
+
+Talare 2 - 28:26
+Men det kanske man kan lösa på något sätt?
+
+Talare 1 - 28:29
+Ja det kan man alltid göra. Det går ju alltid att skapa lite logik om man skulle vilja att den går in och flyttar efter något schema hur den ska lägga in det. Sen ibland är det som så att produktionsplanering är det lätt att tänka sig att man ska vara nere på sån detaljnivå så att man har full koll men i verkligheten då så är det så mycket annat som händer så att ingenting stämmer riktigt ändå. Planerar man superexakt så kommer det inte stämma i alla fall. Då får man bara sitta och ändra på allting hela tiden.
+
+Talare 2 - 29:05
+Beläggningen är inte så kritisk. Det enda som är kvar efter beläggning är slutkontroll och märkning. Märkning Den är ju aldrig någon lång tid.
+
+Talare 1 - 29:20
+När ni märker upp själva produkten menar du eller?
+
+Talare 2 - 29:23
+Ja precis. Då individmärker vi produkten först efter beläggning. Ifall det är så att det blir något fel där så har vi inte lagt tiden på det i förväg. Då gör vi det efteråt.
+
+Talare 1 - 29:41
+Det går att lägga in allt i operationerna. Det är bara att man får komma ihåg att blir det mycket smått så ska det underhållas och läggas upp. Märkning lägger man någon form av standardtid på.
+
+Talare 2 - 30:01
+Ja, det kommer vi se om fem minuter per verktyg. Då har man ett bra snitt. Då är det med skapande av. Märk texten och filen för det.
+
+Talare 1 - 30:15
+Ja just det.
+
+Talare 2 - 30:16
+Vi brukar ta ungefär 2 minuter och märka ett verktyg. Från det du trycker på start till det den är färdig. Ska man då snitta ut tiden för att skriva program och skapa det så blir det någonstans 4-5 minuter per verktyg.
+
+Talare 1 - 30:34
+Ja just det. Ha det bra. Då har ni ju redan rätt bra koll.
+
+Talare 2 - 30:43
+Ja, vi har ju ganska bra koll på vad de olika processerna tar. Men ska vi skriva ner allt det här manuellt hela tiden för varje jobb, så äter det mycket tid, så kan vi göra det. Ja, här är en Stigarp då, att det blir kopplat på artikeln. Så fort du lägger en order på, ja, den här kunden vill köpa fem sådana, så planeras det in automatiskt.
+
+Talare 1 - 31:08
+Mm, det är ju så det görs.
+
+Talare 2 - 31:10
+Ja, det är ju väldigt bra. Räknar den med material också så den plockar ut det från lagret?
+
+Talare 1 - 31:16
+Ja, om du har lagt upp en materialstruktur på den artikeln så kommer den ju planera in det också då. Den kan ju också tas ut enligt schablon eller så får man ju tala om exakt vad man har tagit.
+
+Talare 2 - 31:33
+Ja, för där har ju vi standardmaterial som jag skulle säga att. 90% av alla våra ordrar använder standardmaterial där det finns artikelnummer. Och så är det några enstaka jobb som inte använder det. Där vi köper specifikt för det jobbet. I vissa fall har även de artikelnummer. Egentligen ska alla ha artikelnummer. Det är väl egentligen av lathet som inte vissa har det. Då skulle man kunna göra så att man skapar det för dem.
+
+Talare 1 - 32:10
+Ja, precis.
+
+Talare 2 - 32:11
+Och sen omslipning, då är det på kundens material.
+
+Talare 1 - 32:17
+Är det att han skickar in en borr eller någonting då?
+
+Talare 2 - 32:20
+Ja, precis. De skickar det till oss och så utför vi jobbet åt dem och deras material.
+
+Talare 1 - 32:29
+Är det också standardtider på det? Att ni vet att ska ni slippa en borr så tar det typ 10 minuter?
+
+Talare 2 - 32:39
+Ja, där har vi mer exakta tider. För det är också ett artikelnummer. Som erfar generellt. Där har vi väldigt bra koll. Är det en borr mellan den här och den här diametern så tar det si och så många minuter och sekunder. Där har vi väldigt bra koll. Och gjort mycket kalkyler. I och med att det är någonting vi gör.
+
+Talare 1 - 33:04
+Ja, precis. Har ni redan lagt upp olika artikelnummer på det här? Har du redan artikelnummer på de olika, om det nu var diametern eller vad du sa som kunde skilja, så är det ju bara att knyta dem till de olika artiklarna som ni redan har.
+
+Talare 2 - 33:25
+Vi har ju, jag ska dela igen här. Tar vi det till exempel, just det, artikel.
+
+Talare 2 - 33:42
+Här har vi en sån omslitning av spiralbar HSS mellan diameter 6 och diameter 12. Den här tar typ en och en halv minut. Tar man 203 så är storleken upp. Den här tar typ två minuter. Men det här har vi ju nerspecat så det går ju att skriva jättelätt.
+
+Talare 1 - 34:07
+Ja, precis.
+
+Talare 2 - 34:09
+Och sen har vi specialartiklar.
+
+Talare 1 - 34:22
+Sp-2036.
+
+Talare 2 - 34:26
+Här har vi en profilborr. Den här kan ju inte jag. Hur lång tid den tar.
+
+Talare 1 - 34:38
+Det innebär att då blir det ju bara en operation egentligen på dem, om ni inte har någon efterkontroll eller någonting.
+
+Talare 2 - 34:45
+På omslipning så är det ju en till två operationer. Ja just det, det är det här verktyget. Och den är beräknad att ta. Nu har jag bara totaltiden här. Den står att den ska ta 23 minuter att slipa.
+
+Talare 1 - 35:09
+Här har vi något litet exceldark.
+
+Talare 2 - 35:12
+Det är så här vi räknar ut pris.
+
+Talare 1 - 35:17
+Vad är detta? När ni får förfrågan eller vad är det att titta på?
+
+Talare 2 - 35:25
+När vi får förfrågan från kund så gör vi två saker. Det första är att vi skapar ett program för det i vårt kantsystem. Så vi ser att vi kan göra det, hur lång tid det kommer ta och vilka resurser som kommer användas.
+
+Talare 1 - 35:45
+Ja.
+
+Talare 2 - 35:47
+även en ritning som vi kan skicka till kund och säga - tja, så här kommer det bli, är det så ni vill ha? I detta fallet var det jättebra, för 47-måttet som är i mitten, det skulle vara 22,5. Så kunde kund direkt säga, nej, men det där är för långt, det ska inte vara så, det ska vara så. Så då kunde vi ändra. Det gör vi och då får vi tid och vilket material som ska användas. Då sätter vi in vilken tid det är här. Här har vi en rullista med allt material. Nej, det hade inte funkat. Då kan man välja vilket material det ska vara. Så har man pris, artikelnummer och allting. Om det är någon typ av efterbearbetning, som beläggning till exempel. Och vilken typ av väggbredd. Sen kommer det ner här, så räknar den ut priset åt oss. Så tar den slipningen. Där har vi minutpriset 24,57. Sen tar den ut D gånger 24,57 så får du D. Sen hämtar den ifrån en prislista. och sätter priset där. Sen har vi extra kostnad för rundslip. Då får vi totalpriset när man adderar ihop det. Då ser vi att det priset hamnar för 10 stycken här nere.
+
+Talare 2 - 37:12
+Ska kunden köpa en styck så har vi ett påslag på 1,6. Det här är det vi använder för att räkna ut pris för att kunna ha stafflade priser till våra kunder.
+
+Talare 1 - 37:25
+Skickar ni detta som någon form av.? Eller vet de från början om de frågar på 20 stycken eller hur?
+
+Talare 2 - 37:33
+Vissa kunder frågar, jag vill ha fem sådana här. Vad kostar det? Vissa kunder säger, jag är intresserad av den här, kan du ge mig pris på det? Då lämnar vi kanske pris på 1, 3, 5, 10. Och ibland om kunden frågar på 20. Då kanske vi tar med 50 också, för vi vet att den kunden köper det återkommande och vi vill gärna sälja 50 åt gången istället för 20 åt gången. Så då kan vi ta med en extra position för att göra lite mer försäljning.
+
+Talare 1 - 38:00
+Kommer ni att lägga upp detta som en artikel då eller använder ni någon dummerartikel?
+
+Talare 2 - 38:05
+Nej, då lägger vi upp detta i Garb. Så detta var ju den vi tittade på. 203608.
+
+Talare 1 - 38:13
+Jaha.
+
+Talare 2 - 38:14
+Så det här är 203608.
+
+Talare 1 - 38:16
+Så i princip hade vi kunnat lägga till. Det är ett litet makro som la upp allting i Garp.
+
+Talare 2 - 38:23
+Ja, det skulle man kunna göra. Det hade varit skitsmart.
+
+Talare 1 - 38:28
+Så slipper man ostansen. Det är inte många rader kod som krävs för att göra sådana saker. Det är bara att man behöver veta vad som stämmer. Ja precis. Du hade ju några moment där och det kan ju hända att ni kan lägga till lite fält eller mäkla lite med den mallen så det finns tydligt vad man ska hämta. Annars är det ju bara en knapptryckning för att lägga upp det. Det är väl mest det här med stafflingen som är, ni har ju väldigt många nivåer där.
+
+Talare 2 - 39:02
+Pris har vi inte i GAP.
+
+Talare 1 - 39:05
+Okej.
+
+Talare 2 - 39:06
+Det var för jobbigt att lösa det, så vi sket i det. Vi hämtar alltid pris härifrån. När vi ska uppdatera priser. Just nu är materialpriset extremt upp och ner. Det är Kina som säljer pulvret till Europa. Kina vägrar att skicka pulvret till Europa. Materialpriset ökar en gång i veckan, minst.
+
+Talare 1 - 39:31
+Varför förvägrar de, är det någon konflikt som ligger bakom det här eller världsläget?
+
+Talare 2 - 39:36
+Ja, tullkrig mellan USA och Kina.
+
+Talare 1 - 39:39
+Jaha, men hur påverkar det Europa?
+
+Talare 2 - 39:40
+Det straffar Kina, hela västvärlden.
+
+Talare 1 - 39:42
+Aha, vad snällt.
+
+Talare 2 - 39:45
+Ja, det är jättekul så jag är jätteglad på Trump.
+
+Talare 1 - 39:48
+Ja, precis.
+
+Talare 2 - 39:48
+Smart där.
+
+Talare 1 - 39:50
+Ja, om man vet var man inte var världen tar vägen. Det känns ju som USA just nu också vill separera sig som ett eget block och då blir Europa för sig själva.
+
+Talare 2 - 40:00
+Ja, ja, ja, jo men de gör ju allt. De hatar ju EU. De tycker det är en jättedum idé. Jag fattar inte.
+
+Talare 1 - 40:08
+Nej, det är jäkligt. Ja, det är otäckt och det påverkar ju så mycket. Även fast livet går vidare i så mycket. men sakta men säkert så är det ju så mycket som påverkas här, ja som ett sådant här exempel då, som kanske inte syns så tydligt  men det påverkar.
+
+Talare 2 - 40:24
+Absolut, ekonomin påverkas jättemycket  av USA och vår relation till dem, så det blir bekymmer.
+
+Talare 1 - 40:33
+Men den kalkylen du har, så slipningen det är ju som en operation. Det här sticket, är det också en operation eller ingår det i  slipningen?
+
+Talare 2 - 40:46
+Slipning är ju, ja slipning är i stort sett en operation. Stickel är ju materialet.
+
+Talare 1 - 40:57
+Alltså stickelstor, jaha okej, då fattar jag. Och det har du tagit där uppifrån då någonstans då?
+
+Talare 2 - 41:05
+Ja precis, så det priset kommer ju från den här rullistan här. Så ligger här i den delen man hämtar ifrån.
+
+Talare 2 - 41:19
+Det enda som skulle behöva vara med som en egen position. Det är rundflikning. Just nu lägger vi den som extra. Men det är inga bekymmer att lägga den som en egen position.
+
+Talare 1 - 41:36
+Hade det varit tydligt där man kan plocka vissa positioner och så lägger man upp dem där. Då är ju materialet med också. Även om man inte har Garps artikelnummer. Eller har du Garps artikelnummer?
+
+Talare 2 - 41:50
+Jo, det har vi. De här numren är Garps artikelnummer.
+
+Talare 1 - 41:56
+Ja, just det. Så de ligger i en kolumn där.
+
+Talare 1 - 42:25
+När du får en fråga och så tar ni fram det här arket och räknar ut det och så vet du att ni ska göra fem stycken. Hade du

@@ -179,7 +179,14 @@
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                   <TextBlock FontWeight="SemiBold" FontSize="14" Text="Promptar" />
-                  <Button x:Name="PromptInfoButton" Style="{StaticResource InfoBtn}" Content="?" />
+                  <Button x:Name="PromptInfoButton" Style="{StaticResource InfoBtn}" Content="?">
+                      <Button.ToolTip>
+                          <ToolTip>
+                              <TextBlock TextWrapping="Wrap" MaxWidth="300" 
+                                         Text="Promptar styr hur AI:n formaterar texten. &#x0a;&#x0a;Exempel: Sammanfattning, WhatsApp, Mail. &#x0a;Välj en prompt som standard om du vill slippa väljaren." />
+                          </ToolTip>
+                      </Button.ToolTip>
+                  </Button>
                 </StackPanel>
                 <ListBox x:Name="PromptListBox" Height="90" FontSize="13" Margin="0,0,0,8" />
                 <WrapPanel>
@@ -197,7 +204,14 @@
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                   <TextBlock FontWeight="SemiBold" FontSize="14" Text="Minne" />
-                  <Button x:Name="MemoryInfoButton" Style="{StaticResource InfoBtn}" Content="?" />
+                  <Button x:Name="MemoryInfoButton" Style="{StaticResource InfoBtn}" Content="?">
+                      <Button.ToolTip>
+                          <ToolTip>
+                              <TextBlock TextWrapping="Wrap" MaxWidth="300"
+                                         Text="Minne läggs till som extra kontext i prompten. &#x0a;&#x0a;Bra för namn, preferenser och återkommande fakta. &#x0a;Exempel: 'Bokningslänk: https://aiolle.se/bokning'. &#x0a;Säger du: 'Be dem boka ett möte' → AI kan svara: 'Hej! Boka gärna här: https://aiolle.se/bokning'. &#x0a;&#x0a;Aktiveras per prompt via 'Använd minne'." />
+                          </ToolTip>
+                      </Button.ToolTip>
+                  </Button>
                 </StackPanel>
                 <ListBox x:Name="MemoryListBox" Height="90" FontSize="13" Margin="0,0,0,8" />
                 <WrapPanel>
@@ -318,7 +332,7 @@
       </TabItem>
       
       <!-- TAB 3: Filer (Transcribe Audio Files) -->
-      <TabItem Header="Filer">
+      <TabItem Header="Möten">
         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
           <StackPanel Margin="0,0,12,12">
             
@@ -337,7 +351,8 @@
                   
                   <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                     <Button x:Name="SelectAudioFileButton" Content="Välj fil..." Padding="12,6" />
-                    <TextBlock x:Name="SelectedAudioFileText" Text="Ingen fil vald" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxWidth="280" />
+                    <Button x:Name="BatchQueueButton" Content="Batchkö..." Padding="12,6" Margin="8,0,0,0" />
+                    <TextBlock x:Name="SelectedAudioFileText" Text="Ingen fil vald" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" MaxWidth="220" />
                   </StackPanel>
                   
                   <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
@@ -357,31 +372,131 @@
                     </ComboBox>
                   </StackPanel>
                   
-                  <StackPanel Orientation="Horizontal">
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                     <Button x:Name="StartFileTranscriptionButton" Content="Starta transkribering" Style="{StaticResource PrimaryButton}" IsEnabled="False" Padding="14,8" />
                     <Button x:Name="CancelFileTranscriptionButton" Content="Avbryt" Visibility="Collapsed" Margin="10,0,0,0" Padding="12,6" />
                   </StackPanel>
+
                 </StackPanel>
                 
                 <!-- Right: Information & Encouragement -->
-                <StackPanel Grid.Column="1" Margin="20,0,0,0">
-                   <!-- Accuracy Tip -->
-                   <Border Background="{DynamicResource AccentLight}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-                    <StackPanel>
-                      <TextBlock Text="💡 Tips för bättre resultat" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource AccentForeground}" Margin="0,0,0,4" />
-                      <TextBlock Text="Genom att ange exakt antal talare i mötet ökar du träffsäkerheten för talaridentifieringen markant." FontSize="11" Foreground="{DynamicResource AccentForeground}" TextWrapping="Wrap" />
-                    </StackPanel>
-                  </Border>
+                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top">
+                   <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                     <TextBlock Text="Instruktioner &amp; Tips" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                     <Button Style="{StaticResource InfoBtn}" Content="?">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                <TextBlock TextWrapping="Wrap" MaxWidth="250" Text="Tips: Ange exakt antal talare i mötet för bäst resultat. &#x0a;&#x0a;Autoläget gissar antalet talare men kan ibland missa om någon säger väldigt lite. &#x0a;&#x0a;Diarisering är resurskrävande och tar längre tid än vanlig transkribering." />
+                            </ToolTip>
+                        </Button.ToolTip>
+                     </Button>
+                   </StackPanel>
 
-                  <!-- Performance Info (Compact) -->
-                  <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="0,0,0,8">
-                    <StackPanel>
-                      <TextBlock Text="ℹ️ Prestanda" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2" />
-                      <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap">
-                        Funktionen är resurskrävande. Tidsåtgången varierar kraftigt beroende på din dators prestanda (allt från 2x ljudlängd till flera gånger snabbare).
-                      </TextBlock>
+                   <!-- Advanced Settings Expander (Moved to Right Column) -->
+                   <Expander x:Name="DiarizationAdvancedExpander" Header="Avancerade inställningar" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,10,0,0">
+                    <StackPanel Margin="10,5,0,0">
+                      <!-- Sensitivity Slider -->
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Talarkänslighet:" VerticalAlignment="Center" Width="90" />
+                        <Slider x:Name="DiarizationThresholdSlider" Grid.Column="1" Minimum="0.1" Maximum="2.0" TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="5,0" />
+                        <TextBlock Grid.Column="2" Text="{Binding ElementName=DiarizationThresholdSlider, Path=Value, StringFormat=N2}" VerticalAlignment="Center" Width="30" TextAlignment="Right" Margin="0,0,5,0" />
+                        <Button Grid.Column="3" Style="{StaticResource InfoBtn}" Content="?">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" 
+                                               Text="Bestämmer hur olika två röster måste låta för att räknas som olika personer. &#x0a;&#x0a;Lägre värde (0.1) = programmet är mer 'misstänksamt' och skapar fler talare. &#x0a;Högre värde (2.0) = programmet slår ihop röster lättare." />
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                      </Grid>
+                       
+                      <!-- Labels for Slider -->
+                      <Grid Margin="95,-5,40,8">
+                          <TextBlock Text="0.1" FontSize="10" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Left" />
+                          <TextBlock Text="2.0" FontSize="10" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right" />
+                      </Grid>
+
+                      <!-- MinDurationOn (Kortaste tal) -->
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Kortaste tal (sek):" VerticalAlignment="Center" Width="100" />
+                        <TextBox x:Name="DiarizationMinDurationOnTextBox" Grid.Column="1" VerticalAlignment="Center" Margin="5,0"/>
+                        <Button Grid.Column="2" Style="{StaticResource InfoBtn}" Content="?">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" 
+                                               Text="Ignorerar ljud kortare än detta värde. &#x0a;&#x0a;Höj om du får 'falska starter' från klick eller hoste. Standard: 0.15 sek." />
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                      </Grid>
+
+                      <!-- MinDurationOff (Kortaste paus) -->
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Kortaste paus (sek):" VerticalAlignment="Center" Width="100" />
+                        <TextBox x:Name="DiarizationMinDurationOffTextBox" Grid.Column="1" VerticalAlignment="Center" Margin="5,0"/>
+                        <Button Grid.Column="2" Style="{StaticResource InfoBtn}" Content="?">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" 
+                                               Text="Kortare pauser slås ihop till samma mening. &#x0a;&#x0a;Lägre värde separerar snabba talarbyten bättre. Standard: 0.10 sek." />
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                      </Grid>
+
+                      <!-- Cleanup TextBox -->
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Städning (sek):" VerticalAlignment="Center" Width="100" />
+                        <TextBox x:Name="DiarizationCleanupTextBox" Grid.Column="1" VerticalAlignment="Center" Margin="5,0"/>
+                        <Button Grid.Column="2" Style="{StaticResource InfoBtn}" Content="?">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" 
+                                               Text="Tar bort 'talare' som pratar mindre än denna tid totalt. &#x0a;&#x0a;Bra för att slippa korta ljud som dörrar eller hostningar. Standard: 15 sek." />
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                      </Grid>
+
+                      <!-- Pitch Protection -->
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="DiarizationPitchProtectionCheckBox" Content="Använd tonhöjdsskydd" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Style="{StaticResource InfoBtn}" Content="?">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" 
+                                               Text="Använder AI för att höra skillnad på mörka och ljusa röster (t.ex. man/kvinna). &#x0a;&#x0a;Det förhindrar att personerna blandas ihop även om de pratar samtidigt." />
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                      </Grid>
                     </StackPanel>
-                  </Border>
+                  </Expander>
                 </StackPanel>
               </Grid>
             </Border>
@@ -404,31 +519,48 @@
               <StackPanel>
                 <Grid Margin="0,0,0,6">
                   <TextBlock x:Name="FileTranscriptionStatusText" Text="Bearbetar..." FontSize="13" FontWeight="Medium" />
-                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                     <TextBlock x:Name="TranscriptionElapsedTimeText" Text="00:00" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                     <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                     <TextBlock x:Name="AudioTotalLengthText" Text="00:00" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
-                  </StackPanel>
+                  <TextBlock x:Name="TranscriptionElapsedTimeText" Text="⏱️ 00:00" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
                 </Grid>
                 <ProgressBar x:Name="FileTranscriptionProgressBar" Height="8" />
                 <TextBlock x:Name="FileTranscriptionPercentText" Text="0%" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" HorizontalAlignment="Right" />
+                
+                <!-- Info Banner -->
+                <Border Background="{DynamicResource AccentLight}" CornerRadius="4" Padding="10,8" Margin="0,10,0,0">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="ℹ️" FontSize="14" VerticalAlignment="Top" Margin="0,0,8,0" />
+                    <TextBlock Text="Bearbetningstid varierar – räkna med ungefär lika lång tid som inspelningen. Det är normalt att procenten står stilla under långa perioder." 
+                               FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
               </StackPanel>
             </Border>
+
             
             <!-- Result Card -->
             <Border x:Name="FileTranscriptionResultPanel" Visibility="Collapsed" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16">
-              <StackPanel>
-                <Grid Margin="0,0,0,8">
-                  <TextBlock Text="Resultat" FontWeight="SemiBold" FontSize="15" />
-                  <TextBlock x:Name="TranscriptionStatsText" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" FontStyle="Italic" />
-                </Grid>
-                <TextBox x:Name="FileTranscriptionResultText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="200" MaxHeight="350" VerticalScrollBarVisibility="Auto" Background="{DynamicResource WindowBg}" BorderThickness="1" Padding="10" FontFamily="Consolas" FontSize="12" />
-                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                  <Button x:Name="CopyFileTranscriptionButton" Content="Kopiera text" Padding="14,7" />
-                  <Button x:Name="SaveFileTranscriptionButton" Content="Spara till fil..." Margin="12,0,0,0" Padding="14,7" />
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <!-- Left: Status and Stats -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="✅ Transkribering klar" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimary}" />
+                  <TextBlock x:Name="TranscriptionStatsText" Text="Tid: 0:00 • Hastighet: -" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" />
                 </StackPanel>
-              </StackPanel>
+                
+                <!-- Right: Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                  <Button x:Name="ViewTranscriptionButton" Content="Visa transkribering" Style="{StaticResource PrimaryButton}" Padding="14,7" />
+                  <Button x:Name="SaveFileTranscriptionButton" Content="Spara" Margin="8,0,0,0" Padding="14,7" />
+                </StackPanel>
+              </Grid>
             </Border>
+            
+            <!-- Hidden storage for result text -->
+            <TextBox x:Name="FileTranscriptionResultText" Visibility="Collapsed" />
+
             
           </StackPanel>
         </ScrollViewer>

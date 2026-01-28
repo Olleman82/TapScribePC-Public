@@ -1,4 +1,7 @@
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,33 +18,82 @@ namespace WsprPc.Services.Diarization;
 /// </summary>
 public sealed class FileTranscriptionService : IDisposable
 {
-    private readonly SherpaDiarizationService _diarizer;
+    private SherpaDiarizationService _diarizer;
     private readonly WhisperNetEngine _whisper;
-    private readonly ModelDownloader _modelDownloader;
+    private readonly DependencyManager _dependencyManager;
+    private readonly string _segModelPath;
+    private readonly string _embModelPath;
     private bool _disposed;
 
-    public FileTranscriptionService(WhisperNetEngine whisper, string? modelsPath = null)
+    /// <summary>
+    /// Enable/disable pitch-based gender protection to prevent cross-gender speaker merges.
+    /// When true, speakers detected as male will never be merged with speakers detected as female.
+    /// Default: true
+    /// </summary>
+    public bool EnablePitchProtection { get; set; } = true;
+
+    /// <summary>
+    /// Minimum similarity for merging speakers. Lower = more aggressive merging.
+    /// Default: 0.40f (Optimized for TitaNet and Swedish voices when target exists).
+    /// </summary>
+    public float SafeMergeThreshold { get; set; } = 0.40f;
+
+    /// <summary>
+    /// Clustering threshold for Sherpa. Higher = fewer clusters.
+    /// Default: 0.75f (Balanced)
+    /// </summary>
+    public float ClusteringThreshold { get; set; } = 0.75f;
+
+    /// <summary>
+    /// Minimum total duration for a speaker to be kept (Ghost Cleanup).
+    /// Default: 15.0s (aligned with Test 4)
+    /// </summary>
+    public double MinTotalDurationSeconds { get; set; } = 15.0;
+
+    /// <summary>
+    /// Minimum speech duration before Voice Activity is considered speech.
+    /// Higher = filter out short noises (clicks, breaths). Default: 0.15f (aligned with Test 4)
+    /// </summary>
+    public float MinDurationOn { get; set; } = 0.15f;
+
+    /// <summary>
+    /// Minimum silence duration before breaking a speech segment.
+    /// Lower = more aggressive splitting (better for rapid speaker changes). Default: 0.10f (aligned with Test 4)
+    /// </summary>
+    public float MinDurationOff { get; set; } = 0.10f;
+
+    /// <summary>
+    /// Force a specific number of speaker clusters in Sherpa.
+    /// -1 = auto-detect (default), positive value = forced cluster count.
+    /// </summary>
+    public int ForcedNumClusters { get; set; } = -1;
+
+    public FileTranscriptionService(WhisperNetEngine whisper, string? baseDir = null)
     {
         _whisper = whisper ?? throw new ArgumentNullException(nameof(whisper));
-        _modelDownloader = new ModelDownloader(modelsPath);
-        _diarizer = new SherpaDiarizationService(
-            _modelDownloader.SegmentationModelPath,
-            _modelDownloader.EmbeddingModelPath);
+        _dependencyManager = new DependencyManager(baseDir);
+        
+        // Note: Models are expected in third_party inside baseDir
+        string modelsPath = Path.Combine(baseDir ?? AppContext.BaseDirectory, "third_party", "models", "sherpa");
+        _segModelPath = Path.Combine(modelsPath, "sherpa-onnx-reverb-diarization-v1", "model.onnx");
+        _embModelPath = Path.Combine(modelsPath, "nemo_en_titanet_large.onnx");
+
+        _diarizer = new SherpaDiarizationService(_segModelPath, _embModelPath);
     }
 
     /// <summary>
-    /// Check if diarization models are available.
+    /// Check if diarization models and tools are available.
     /// </summary>
-    public bool ModelsReady => _modelDownloader.ModelsExist;
+    public bool ModelsReady => _dependencyManager.AllReady;
 
     /// <summary>
-    /// Download diarization models if missing.
+    /// Download diarization models and FFmpeg if missing.
     /// </summary>
     public async Task EnsureModelsAsync(
         IProgress<(int percent, string status)>? progress = null,
         CancellationToken ct = default)
     {
-        await _modelDownloader.EnsureModelsAsync(progress, ct);
+        await _dependencyManager.EnsureDependenciesAsync(progress, ct);
     }
 
     /// <summary>
@@ -66,17 +118,30 @@ public sealed class FileTranscriptionService : IDisposable
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
 
             // Phase 1: Load audio (0-10%)
-            progress?.Report((0, "Laddar ljudfil..."));
-            var audioFloat = await AudioFileLoader.LoadAsFloatAsync(filePath, ct);
+            progress?.Report((0, "Laddar och tvättar ljud..."));
+            
+            // Use FFmpeg for high-quality preprocessing (balanced profile)
+            var audioFloat = await AudioFileLoader.LoadNormalizedAsFloatAsync(filePath, _dependencyManager.FfmpegPath, ct);
             var audioPcm16 = await AudioFileLoader.LoadAsync(filePath, ct);
-            progress?.Report((10, "Ljudfil laddad"));
+            progress?.Report((10, "Ljudfil laddad och normaliserad"));
 
-            // Phase 2: Initialize diarizer if needed
-            if (!_diarizer.IsInitialized)
+            // Phase 2: Always recreate diarizer to pick up new parameters (fixes threshold bug)
+            // Dispose old instance and create new one to apply new ForcedNumClusters/Threshold
+            if (_diarizer.IsInitialized)
             {
-                progress?.Report((12, "Initierar talarmodell..."));
-                _diarizer.Initialize(numThreads);
+                progress?.Report((11, "Återinitierar talarmodell med nya inställningar..."));
+                _diarizer.Dispose();
+                _diarizer = new SherpaDiarizationService(_segModelPath, _embModelPath);
             }
+            
+            progress?.Report((12, "Initierar talarmodell..."));
+            _diarizer.ForcedNumClusters = this.ForcedNumClusters;
+            _diarizer.ClusteringThreshold = this.ClusteringThreshold;
+            _diarizer.MinDurationOn = this.MinDurationOn;
+            _diarizer.MinDurationOff = this.MinDurationOff;
+            _diarizer.Initialize(numThreads);
+
+            Debug.WriteLine($"Diarizer Params: Threshold={_diarizer.ClusteringThreshold}, NumClusters={_diarizer.ForcedNumClusters}, MinOn={_diarizer.MinDurationOn}, MinOff={_diarizer.MinDurationOff}");
 
             // Phase 3: Run diarization (10-40%)
             progress?.Report((15, "Identifierar talare..."));
@@ -103,6 +168,29 @@ public sealed class FileTranscriptionService : IDisposable
             }
 
             var segments = await diarizationTask;
+
+            // Phase 3.5: Stage 2 "Statistical Fingerprint Merge"
+            progress?.Report((38, "Stärker talarprofiler..."));
+            using var fingerprintService = new SpeakerFingerprintService(_diarizer.EmbeddingModelPath, numThreads);
+            
+            // CRITICAL SETTINGS FOR HIGH ACCURACY MERGE
+            fingerprintService.EnablePitchProtection = this.EnablePitchProtection; // Use user setting
+            fingerprintService.SafeMergeThreshold = 0.40f;   // Aggressive merge allowed if targeting count
+            
+            // 1. Merge to Target (if requested)
+            if (expectedSpeakers.HasValue && expectedSpeakers.Value > 0 && segments.Count > expectedSpeakers.Value)
+            {
+                segments = fingerprintService.MergeToCount(segments, audioFloat, AudioFileLoader.TargetSampleRate, expectedSpeakers.Value);
+            }
+            
+            // 2. Cleanup Ghosts (User configurable / Default 5s)
+            segments = fingerprintService.CleanupGhostSegments(segments, minTotalDurationSeconds: this.MinTotalDurationSeconds);
+
+            // 3. Add padding (150ms) to prevent chopped-off starts/ends
+            segments = segments.Select(s => s with {
+                Start = s.Start.TotalSeconds > 0.15 ? s.Start - TimeSpan.FromMilliseconds(150) : TimeSpan.Zero,
+                End = s.End + TimeSpan.FromMilliseconds(150)
+            }).ToList();
 
             if (segments.Count == 0)
             {
@@ -156,6 +244,7 @@ public sealed class FileTranscriptionService : IDisposable
             try { Process.GetCurrentProcess().PriorityClass = originalPriority; } catch { }
         }
     }
+
 
     private static string FormatOutput(List<DiarizationSegment> segments)
     {

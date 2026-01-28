@@ -13,6 +13,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
@@ -25,19 +26,52 @@
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
       <TextBlock Width="140" VerticalAlignment="Center" Text="Leverantör" Foreground="{DynamicResource TextPrimary}" />
       <ComboBox x:Name="ProviderCombo" Width="160" />
-      <CheckBox x:Name="UseMemoryCheck" Margin="12,0,0,0" Content="Använd minne" Foreground="{DynamicResource TextPrimary}">
+      <CheckBox x:Name="UseMemoryCheck" Margin="12,0,0,0" Content="Minne" Foreground="{DynamicResource TextPrimary}">
         <CheckBox.ToolTip>
           <TextBlock Text="Lägger till dina minnesposter som extra kontext i prompten." />
         </CheckBox.ToolTip>
       </CheckBox>
-      <CheckBox x:Name="UseClipboardCheck" Margin="12,0,0,0" Content="Använd urklipp" Foreground="{DynamicResource TextPrimary}">
+      <CheckBox x:Name="UseClipboardCheck" Margin="12,0,0,0" Content="Urklipp" Foreground="{DynamicResource TextPrimary}">
         <CheckBox.ToolTip>
           <TextBlock Text="Inkluderar urklippets innehåll som kontext till AI:n." />
         </CheckBox.ToolTip>
       </CheckBox>
+      <CheckBox x:Name="SendToWebhookCheck" Margin="12,0,0,0" Content="Skicka till Webhook" Foreground="{DynamicResource TextPrimary}">
+        <CheckBox.ToolTip>
+          <TextBlock Text="Skickar resultatet till en URL istället för att klistra in det." />
+        </CheckBox.ToolTip>
+      </CheckBox>
     </StackPanel>
 
-    <StackPanel x:Name="GeminiSettingsPanel" Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+    <!-- Webhook Settings (Visible only when SendToWebhookCheck is checked) -->
+    <StackPanel x:Name="WebhookSettingsPanel" Grid.Row="2" Orientation="Vertical" Margin="0,10,0,0" Visibility="Collapsed">
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+        <CheckBox x:Name="SendRawTextCheck" Content="Skicka obearbetad text (RAW)" Foreground="{DynamicResource TextPrimary}">
+           <CheckBox.ToolTip>
+             <TextBlock Text="Hoppar över AI-bearbetning och skickar din talade text direkt." />
+           </CheckBox.ToolTip>
+        </CheckBox>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Width="140" VerticalAlignment="Center" Text="Webhook URL" Foreground="{DynamicResource TextPrimary}" />
+        <TextBox x:Name="WebhookUrlBox" Width="260" />
+        <TextBlock Margin="12,0,6,0" VerticalAlignment="Center" Text="Token" Foreground="{DynamicResource TextPrimary}" />
+        <TextBox x:Name="WebhookTokenBox" Width="140" />
+        
+        <TextBlock Text="🛈" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Cursor="Help">
+            <TextBlock.ToolTip>
+                <TextBlock>
+                    <Run FontWeight="Bold">Krav för Webhook:</Run><LineBreak/>
+                    <Run>• Header: X-Webhook-Token: &lt;token&gt;</Run><LineBreak/>
+                    <Run>• Body: JSON {"text": "..."}</Run><LineBreak/>
+                    <Run>• Content-Type: application/json</Run>
+                </TextBlock>
+            </TextBlock.ToolTip>
+        </TextBlock>
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel x:Name="GeminiSettingsPanel" Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
       <TextBlock Width="140" VerticalAlignment="Center" Text="Gemini‑modell" Foreground="{DynamicResource TextPrimary}" />
       <TextBox x:Name="GeminiModelBox" Width="200" />
       <CheckBox x:Name="GeminiThinkingCheck" Margin="12,0,0,0" Content="Tänkläge" Foreground="{DynamicResource TextPrimary}">
@@ -52,21 +86,21 @@
       </CheckBox>
     </StackPanel>
 
-    <StackPanel x:Name="OpenAiSettingsPanel" Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
+    <StackPanel x:Name="OpenAiSettingsPanel" Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
       <TextBlock Width="140" VerticalAlignment="Center" Text="OpenAI‑modell" Foreground="{DynamicResource TextPrimary}" />
       <ComboBox x:Name="OpenAiModelCombo" Width="200" />
       <TextBox x:Name="OpenAiModelBox" Width="200" Margin="8,0,0,0" />
     </StackPanel>
 
-    <StackPanel x:Name="OpenAiReasoningPanel" Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
+    <StackPanel x:Name="OpenAiReasoningPanel" Grid.Row="5" Orientation="Horizontal" Margin="0,10,0,0">
       <TextBlock Width="140" VerticalAlignment="Center" Text="Resonemang" Foreground="{DynamicResource TextPrimary}" />
       <ComboBox x:Name="OpenAiReasoningCombo" Width="200" />
       <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Text="Vissa modeller kan neka 'none'." />
     </StackPanel>
 
-    <TextBlock Grid.Row="5" x:Name="OpenAiWarningText" Margin="0,6,0,0" Foreground="{DynamicResource AccentBrush}" Text="" />
+    <TextBlock Grid.Row="6" x:Name="OpenAiWarningText" Margin="0,6,0,0" Foreground="{DynamicResource AccentBrush}" Text="" />
 
-    <StackPanel Grid.Row="6" Margin="0,10,0,0">
+    <StackPanel x:Name="InstructionsPanel" Grid.Row="7" Margin="0,10,0,0">
       <TextBlock Text="Systeminstruktion" Foreground="{DynamicResource TextPrimary}" />
       <TextBox x:Name="SystemBox" Height="120" AcceptsReturn="True" TextWrapping="Wrap" />
       <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource TextSecondary}" Text="Systeminstruktion styr ton, format och regler för svaret." />
@@ -75,7 +109,7 @@
       <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource TextSecondary}" Text="Extra instruktion används bara för denna prompt och kan lämnas tom." />
     </StackPanel>
 
-    <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+    <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
       <Button x:Name="CancelButton" Width="90" Margin="0,0,8,0" Content="Avbryt" />
       <Button x:Name="OkButton" Width="90" Content="Spara" Style="{StaticResource PrimaryButton}" />
     </StackPanel>
