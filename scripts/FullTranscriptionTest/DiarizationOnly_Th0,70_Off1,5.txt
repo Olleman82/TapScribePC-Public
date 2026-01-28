@@ -1,2 +1,0 @@
-Threshold: 0,70, MinOff: 1,5
-Start|End|Speaker
