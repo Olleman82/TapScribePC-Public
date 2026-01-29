@@ -111,6 +111,10 @@ debug/
 models/**/*.bin
 models/**/*.gguf
 models/**/*.ggml
+models/**/*.onnx
+third_party/models/
+*.zip
+Publish/
 *.env
 .env
 .env.local
@@ -130,6 +134,19 @@ todo.md
 todo_whisper.md
 *.prompt.md
 
+
+# Documentation / Sensitive Transcripts
+docs/
+*.txt
+!WsprPc/BuildId.txt
+!TapScribe_README.txt
+!README.txt
+
+# Temporary / Build Artifacts
+temp_zip_check/
+build_release/
+scripts/DiarizationBenchmark/build_output.txt
+
 # Internal Testing / Artifacts
 ChunkTest/
 debug/
@@ -142,6 +159,29 @@ WsprPc.Tests/obj/
 # Third party binaries (pre-built executables)
 third_party/whisper.cpp_bin/
 third_party/whisper.cpp_bin_v1.8.2/
+third_party/whisper.cpp_bin_v1.8.2_x64/
+third_party/whisper.cpp_bin_v1.8.2_Win32/
+third_party/whisper.cpp_bin_v1.5.1_x64/
+third_party/whisper.cpp_bin_v1.5.1_Win32/
+!third_party/whisper.cpp_bin_v1.5.1_x64/*.dll
+!third_party/whisper.cpp_bin_v1.5.1_x64/*.exe
+!third_party/whisper.cpp_bin_v1.5.1_Win32/*.dll
+!third_party/whisper.cpp_bin_v1.5.1_Win32/*.exe
+scripts/third_party/
+third_party/ffmpeg/
+third_party/whisper.cpp/
+*.zip
+
+
+# Test Outputs (Sensitive Data)
+scripts/**/output/
+scripts/**/output_*/
+scripts/**/*_result.txt
+scripts/**/*.txt
+!scripts/**/README.txt
+!scripts/**/facit_*.txt
+scripts/**/*.md
+!scripts/**/README.md
 
 # User-specific files
 *.rsuser

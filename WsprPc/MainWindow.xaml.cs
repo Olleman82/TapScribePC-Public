@@ -1875,6 +1875,11 @@ private static bool IsUsablePath(string path)
         Dispatcher.Invoke(() => LastResultText.Text = "Bearbetar i bakgrunden...");
 
         // Run AI/Webhook in background
+        // Capture UI values on main thread to avoid cross-thread exceptions
+        string? geminiKey = GetGeminiKey();
+        string? openAiKey = GetOpenAiKey();
+        bool autoPaste = IsAutoPasteEnabled();
+
         _ = Task.Run(async () =>
         {
             try 
@@ -1894,7 +1899,7 @@ private static bool IsUsablePath(string path)
                 }
                 else
                 {
-                    resultText = await ProcessWithAiAsync(transcript, prompt);
+                    resultText = await ProcessWithAiAsync(transcript, prompt, geminiKey, openAiKey);
                 }
 
                 if (string.IsNullOrWhiteSpace(resultText))
@@ -1925,17 +1930,10 @@ private static bool IsUsablePath(string path)
                 }
                 else
                 {
-                    if (IsAutoPasteEnabled())
+                    if (autoPaste)
                     {
-                        _controller.PasteResult(resultText);
+                        Dispatcher.Invoke(() => _controller.PasteResult(resultText));
                     }
-                    
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var popup = new TranscriptionResultWindow(resultText, "AI-svar", TimeSpan.Zero, TimeSpan.Zero);
-                        popup.Show();
-                        popup.Activate();
-                    });
                 }
             }
             catch (Exception ex)
@@ -2001,25 +1999,23 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         return selected;
     }
 
-    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt)
+    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt, string? geminiKey, string? openAiKey)
     {
         BuildPromptBlocks(prompt, text, out var systemInstruction, out var bodyText);
 
         if (prompt.Provider == AiProvider.Gemini)
         {
-            string? key = GetGeminiKey();
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(geminiKey))
                 throw new InvalidOperationException("Gemini‑nyckel saknas.");
 
             return await _geminiClient.GenerateAsync(
-                key,
+                geminiKey,
                 prompt.GeminiModel,
                 CombineForGemini(systemInstruction, bodyText),
                 prompt.GeminiUseThinking,
                 prompt.GeminiUseGrounding);
         }
 
-        string? openAiKey = GetOpenAiKey();
         if (string.IsNullOrWhiteSpace(openAiKey))
             throw new InvalidOperationException("OpenAI‑nyckel saknas.");
 
