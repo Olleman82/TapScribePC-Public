@@ -26,4 +26,7 @@ public sealed class PromptDefinition
     public string WebhookUrl { get; set; } = "";
     public string WebhookToken { get; set; } = "";
     public bool SendRawText { get; set; }
+    
+    // Mail prompt settings
+    public bool IsMailPrompt { get; set; }
 }

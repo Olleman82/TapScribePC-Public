@@ -84,6 +84,23 @@
           <TextBlock Text="Tillåter Google‑sök. Ofta bättre fakta men långsammare svar." />
         </CheckBox.ToolTip>
       </CheckBox>
+      <CheckBox x:Name="IsMailPromptCheck" Margin="12,0,0,0" Content="📧 Mail" Foreground="{DynamicResource TextPrimary}">
+        <CheckBox.ToolTip>
+          <TextBlock MaxWidth="350" TextWrapping="Wrap">
+            <Run FontWeight="Bold">Mail-läge</Run><LineBreak/>
+            <LineBreak/>
+            AI:n söker automatiskt upp mottagarens e-postadress via Google och komponerar ett mail baserat på vad du säger.<LineBreak/>
+            <LineBreak/>
+            <Run FontWeight="SemiBold">Hur du styr formatet:</Run><LineBreak/>
+            Använd rutan <Run FontStyle="Italic">"Användarinstruktion"</Run> nedanför för att bestämma mailets stil och ton (t.ex. "Var formell", "Skriv på engelska").<LineBreak/>
+            <LineBreak/>
+            <Run FontWeight="SemiBold">Exempel:</Run><LineBreak/>
+            "Skicka mail till Anna Berg på Företaget AB att jag kommer 15 minuter sent till mötet"<LineBreak/>
+            <LineBreak/>
+            Mailet öppnas som utkast i din standard-mailklient där du kan redigera allt innan du skickar.
+          </TextBlock>
+        </CheckBox.ToolTip>
+      </CheckBox>
     </StackPanel>
 
     <StackPanel x:Name="OpenAiSettingsPanel" Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">

@@ -19,11 +19,32 @@
     <StackPanel Grid.Row="0" Margin="0,0,0,16">
       <TextBlock FontSize="20" FontWeight="SemiBold" Text="❓ Vanliga frågor" Foreground="{DynamicResource TextPrimary}" />
       <TextBlock Foreground="{DynamicResource TextSecondary}" Text="Tips och tricks för att få ut mesta möjliga av TapScribe" />
+      
+      <!-- Search Box -->
+      <Grid Margin="0,16,0,0">
+        <TextBox x:Name="SearchBox" Height="32" Padding="8,0" VerticalContentAlignment="Center"
+                 Background="{DynamicResource InputBg}" Foreground="{DynamicResource TextPrimary}"
+                 BorderBrush="{DynamicResource BorderColor}"
+                 TextChanged="SearchBox_TextChanged" />
+        <TextBlock Text="🔍 Sök bland frågor..." IsHitTestVisible="False" 
+                   Foreground="{DynamicResource TextSecondary}" Opacity="0.6" Margin="10,0,0,0" VerticalAlignment="Center">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Visibility" Value="Collapsed" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                  <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </Grid>
     </StackPanel>
     
     <!-- FAQ Items -->
     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-      <StackPanel>
+      <StackPanel x:Name="FaqItemsPanel">
         
         <!-- FAQ 1: Kontroll -->
         <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
@@ -102,6 +123,29 @@
               <LineBreak />
               <Run FontWeight="Medium">F9 (AI):</Run>
               <Run>Transkriberar först, sedan förbättrar AI:n texten enligt din valda prompt innan den klistras in.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+
+        <!-- FAQ: Mail -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="📧 Hur fungerar Mail-funktionen?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run FontWeight="Medium">1. Skapa en prompt:</Run>
+              <Run>Kryssa i "📧 Mail" när du skapar en ny prompt.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">2. Din instruktion styr stilen:</Run>
+              <Run>Det du skriver i rutan "Användarinstruktion" bestämmer tonaliteten. Exempel: "Var formell och kortfattad" eller "Var trevlig och använd emojis".</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">3. Tala in:</Run>
+              <Run>"Skicka mail till Olle på aiolle.se om att jag blir sen".</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">4. Resultat:</Run>
+              <Run>AI:n letar upp adressen via Google och öppnar ett UTKAST i din mailklient. Inget skickas automatiskt!</Run>
             </TextBlock>
           </StackPanel>
         </Border>

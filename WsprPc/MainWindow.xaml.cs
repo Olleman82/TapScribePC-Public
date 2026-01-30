@@ -40,6 +40,7 @@ public partial class MainWindow : Window
     private readonly PromptStore _promptStore;
     private readonly MemoryStore _memoryStore;
     private readonly HistoryStore _historyStore;
+    private readonly MailService _mailService; // Added
     private List<PromptDefinition> _prompts = new();
     private List<MemoryItem> _memory = new();
     private PromptDefinition? _defaultPrompt;
@@ -79,6 +80,7 @@ public partial class MainWindow : Window
         var polisher = new TextPolisher();
         var paster = new PasteInjector();
         _engine = new WhisperNetEngine();
+        _mailService = new MailService(); // Added
 
         string dataDir = GetAppDataDir();
         _configPath = Path.Combine(dataDir, "appsettings.json");
@@ -1895,6 +1897,9 @@ private static bool IsUsablePath(string path)
         string? openAiKey = GetOpenAiKey();
         bool autoPaste = IsAutoPasteEnabled();
 
+        // Capture original prompt object for ID reference later
+        var originalPrompt = prompt;
+
         _ = Task.Run(async () =>
         {
             try 
@@ -1914,6 +1919,16 @@ private static bool IsUsablePath(string path)
                 }
                 else
                 {
+                    // Create a clone/copy so we can modify it for this request without affecting the stored prompt
+                    var workPrompt = prompt; 
+                    
+                    // For mail prompts, we inject special system instructions
+                    if (prompt.IsMailPrompt)
+                    {
+                         // We don't modify the stored prompt, but logic inside ProcessWithAiAsync handles the injection
+                         // based on IsMailPrompt flag.
+                    }
+                    
                     resultText = await ProcessWithAiAsync(transcript, prompt, geminiKey, openAiKey);
                 }
 
@@ -1923,8 +1938,8 @@ private static bool IsUsablePath(string path)
                     return;
                 }
 
-                // Save last used prompt
-                _config.LastPromptId = prompt.Id;
+                // Save last used prompt (use original prompt object for ID)
+                 _config.LastPromptId = originalPrompt.Id;
                 _config.Save(_configPath);
 
                 if (prompt.SendToWebhook && !string.IsNullOrWhiteSpace(prompt.WebhookUrl))
@@ -1945,10 +1960,46 @@ private static bool IsUsablePath(string path)
                 }
                 else
                 {
+                if (originalPrompt.IsMailPrompt)
+                {
+                    // Handle mail result
+                    var mailResult = _mailService.ParseMailResponse(resultText);
+                    
+                    if (!string.IsNullOrWhiteSpace(mailResult.EmailTo))
+                    {
+                        Dispatcher.Invoke(() => 
+                        {
+                           bool opened = _mailService.OpenMailClient(
+                               mailResult.EmailTo!, 
+                               mailResult.Subject ?? "", 
+                               mailResult.Body ?? "");
+                               
+                           if (!opened)
+                           {
+                               WpfMessageBox.Show("Kunde inte öppna e-postklienten.", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+                               // Fallback: clipboard?
+                               System.Windows.Clipboard.SetText(resultText);
+                           }
+                        });
+                    }
+                    else
+                    {
+                        // Parse failed / no email found
+                        Dispatcher.Invoke(() => 
+                        {
+                            WpfMessageBox.Show("Kunde inte tolka e-postinformation (ingen mottagare hittades).", "Mail-fel", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            // Fallback: clipboard
+                             System.Windows.Clipboard.SetText(resultText);
+                        });
+                    }
+                }
+                else
+                {
                     if (autoPaste)
                     {
                         Dispatcher.Invoke(() => _controller.PasteResult(resultText));
                     }
+                }
                 }
                 
                 // Log to history
@@ -2035,8 +2086,8 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
                 geminiKey,
                 prompt.GeminiModel,
                 CombineForGemini(systemInstruction, bodyText),
-                prompt.GeminiUseThinking,
-                prompt.GeminiUseGrounding);
+                prompt.IsMailPrompt || prompt.GeminiUseThinking, // Force thinking for mail
+                prompt.IsMailPrompt || prompt.GeminiUseGrounding); // Force grounding for mail
         }
 
         if (string.IsNullOrWhiteSpace(openAiKey))
@@ -2069,6 +2120,20 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
     private void BuildPromptBlocks(PromptDefinition prompt, string transcript, out string systemInstruction, out string bodyText)
     {
         systemInstruction = prompt.SystemInstruction.Trim();
+        
+        if (prompt.IsMailPrompt)
+        {
+            // Inject mail system prompt logic
+            string mailInstructions = _mailService.BuildMailSystemPrompt(prompt.UserInstruction);
+            // If user has custom system instructions, append them?
+            // Actually, for mail, the mail system prompt is primary.
+            // We can append the user's custom system instruction to the end of the built-in one.
+            if (!string.IsNullOrWhiteSpace(systemInstruction))
+            {
+                 mailInstructions += "\n\n" + systemInstruction;
+            }
+            systemInstruction = mailInstructions;
+        }
 
         string memoryBlock = string.Empty;
         if (prompt.UseMemory && _memory.Count > 0)

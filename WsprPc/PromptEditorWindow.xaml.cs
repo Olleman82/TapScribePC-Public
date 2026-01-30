@@ -58,6 +58,14 @@ public partial class PromptEditorWindow : Window
             GeminiModelBox.Text = existing.GeminiModel;
             GeminiThinkingCheck.IsChecked = existing.GeminiUseThinking;
             GeminiGroundingCheck.IsChecked = existing.GeminiUseGrounding;
+            IsMailPromptCheck.IsChecked = existing.IsMailPrompt;
+            if (existing.IsMailPrompt)
+            {
+                GeminiThinkingCheck.IsChecked = true;
+                GeminiThinkingCheck.IsEnabled = false;
+                GeminiGroundingCheck.IsChecked = true;
+                GeminiGroundingCheck.IsEnabled = false;
+            }
             OpenAiModelBox.Text = existing.OpenAiModel;
             GeminiGroundingCheck.IsChecked = existing.GeminiUseGrounding;
             OpenAiModelBox.Text = existing.OpenAiModel;
@@ -98,6 +106,23 @@ public partial class PromptEditorWindow : Window
         SendRawTextCheck.Checked += (_, _) => UpdateProviderVisibility();
         SendRawTextCheck.Unchecked += (_, _) => UpdateProviderVisibility();
         UpdateWebhookVisibility();
+        
+        // Mail prompt logic
+        IsMailPromptCheck.Checked += (_, _) =>
+        {
+            // Auto-enable and lock Thinking + Grounding
+            GeminiThinkingCheck.IsChecked = true;
+            GeminiThinkingCheck.IsEnabled = false;
+            GeminiGroundingCheck.IsChecked = true;
+            GeminiGroundingCheck.IsEnabled = false;
+        };
+        
+        IsMailPromptCheck.Unchecked += (_, _) =>
+        {
+            // Unlock controls (keep them checked or not is up to user, but let's unlock)
+            GeminiThinkingCheck.IsEnabled = true;
+            GeminiGroundingCheck.IsEnabled = true;
+        };
 
         OkButton.Click += (_, _) =>
         {
@@ -117,6 +142,7 @@ public partial class PromptEditorWindow : Window
                 : GeminiModelBox.Text.Trim();
             Result.GeminiUseThinking = GeminiThinkingCheck.IsChecked == true;
             Result.GeminiUseGrounding = GeminiGroundingCheck.IsChecked == true;
+            Result.IsMailPrompt = IsMailPromptCheck.IsChecked == true;
             Result.OpenAiModel = string.IsNullOrWhiteSpace(OpenAiModelBox.Text)
                 ? "gpt-5-mini"
                 : OpenAiModelBox.Text.Trim();
