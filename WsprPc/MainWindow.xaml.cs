@@ -39,6 +39,7 @@ public partial class MainWindow : Window
     private AppLogger? _logger;
     private readonly PromptStore _promptStore;
     private readonly MemoryStore _memoryStore;
+    private readonly HistoryStore _historyStore;
     private List<PromptDefinition> _prompts = new();
     private List<MemoryItem> _memory = new();
     private PromptDefinition? _defaultPrompt;
@@ -148,6 +149,7 @@ public partial class MainWindow : Window
 
         _promptStore = new PromptStore(Path.Combine(dataDir, "prompts.json"));
         _memoryStore = new MemoryStore(Path.Combine(dataDir, "memory.json"));
+        _historyStore = new HistoryStore(Path.Combine(dataDir, "history.json"));
 
         InitializeDownloadUi();
         InitializeModelSelector();
@@ -185,6 +187,7 @@ public partial class MainWindow : Window
         SaveFileTranscriptionButton.Click += (_, _) => SaveFileTranscriptionResult();
         BatchQueueButton.Click += (_, _) => OpenBatchQueue();
         DownloadDiarizationModelsButton.Click += async (_, _) => await DownloadDiarizationModelsAsync();
+        HistoryButton.Click += (_, _) => ShowHistory();
         
         // Initialize file transcription service
         InitializeFileTranscriptionService();
@@ -1682,6 +1685,12 @@ private static bool IsUsablePath(string path)
         dialog.ShowDialog();
     }
 
+    private void ShowHistory()
+    {
+        var dialog = new HistoryWindow(_historyStore) { Owner = this };
+        dialog.ShowDialog();
+    }
+
     private void ShowAiInfo()
     {
         string aiKey = _config.AiHotkey;
@@ -1753,6 +1762,12 @@ private static bool IsUsablePath(string path)
             {
                 _logger?.Info($"Direkt: Fick resultat ({result.Length} tecken).");
                 Dispatcher.Invoke(() => LastResultText.Text = result);
+                _historyStore.Add(new HistoryItem(
+                    Guid.NewGuid().ToString(),
+                    DateTime.Now,
+                    result,
+                    HistoryItemType.Transcription
+                ));
                 if (IsAutoPasteEnabled())
                 {
                     _logger?.Info($"Direkt: auto-paste {( _controller.LastPasteSucceeded ? "ok" : "misslyckades" )} (mål=0x{_targetWindow.ToInt64():X})");
@@ -1935,6 +1950,14 @@ private static bool IsUsablePath(string path)
                         Dispatcher.Invoke(() => _controller.PasteResult(resultText));
                     }
                 }
+                
+                // Log to history
+                Dispatcher.Invoke(() => _historyStore.Add(new HistoryItem(
+                    Guid.NewGuid().ToString(),
+                    DateTime.Now,
+                    resultText,
+                    HistoryItemType.AI
+                )));
             }
             catch (Exception ex)
             {

@@ -4,7 +4,7 @@ param(
     [string]$Configuration = "Release"
 )
 
-$publishDir = Join-Path $RepoRoot "publish"
+$publishDir = "c:\tapscribe"
 $distDir = Join-Path $RepoRoot "installer\\dist"
 $zipPath = Join-Path $distDir "TapScribe.zip"
 

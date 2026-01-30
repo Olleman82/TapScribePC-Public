@@ -222,5 +222,78 @@
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Padding" Value="8,4" />
     </Style>
+    
+    <!-- DatePicker dark theme aware -->
+    <Style TargetType="DatePicker">
+      <Setter Property="Background" Value="{DynamicResource ControlBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="Padding" Value="4" />
+    </Style>
+    
+    <Style TargetType="DatePickerTextBox">
+      <Setter Property="Background" Value="{DynamicResource ControlBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    
+    <!-- Calendar dark theme aware -->
+    <Style TargetType="Calendar">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    
+    <Style TargetType="CalendarDayButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    
+    <Style TargetType="CalendarButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    
+    <!-- Dark scrollbar -->
+    <Style TargetType="ScrollBar">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ScrollBar">
+            <Grid>
+              <Track x:Name="PART_Track" IsDirectionReversed="True">
+                <Track.Thumb>
+                  <Thumb>
+                    <Thumb.Style>
+                      <Style TargetType="Thumb">
+                        <Setter Property="Background" Value="{DynamicResource BorderColor}" />
+                        <Setter Property="Template">
+                          <Setter.Value>
+                            <ControlTemplate TargetType="Thumb">
+                              <Border Background="{TemplateBinding Background}" CornerRadius="4" Margin="1" />
+                            </ControlTemplate>
+                          </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                          <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource TextSecondary}" />
+                          </Trigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Thumb.Style>
+                  </Thumb>
+                </Track.Thumb>
+              </Track>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+      <Style.Triggers>
+        <Trigger Property="Orientation" Value="Horizontal">
+          <Setter Property="Width" Value="Auto" />
+          <Setter Property="Height" Value="8" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
   </Application.Resources>
 </Application>

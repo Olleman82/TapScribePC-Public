@@ -58,6 +58,39 @@
         <StackPanel Grid.Column="2" Orientation="Horizontal">
           <ToggleButton x:Name="DarkModeToggle" Style="{StaticResource FlipSwitch}" VerticalAlignment="Center" Margin="0,0,6,0" ToolTip="Mörkt tema" />
           <TextBlock Text="🌙" FontSize="14" VerticalAlignment="Center" Margin="0,0,12,0" />
+          
+          <!-- Historik-knapp -->
+          <Button x:Name="HistoryButton"
+                  Content="📋 Historik" 
+                  Padding="10,4"
+                  Margin="0,0,8,0"
+                  VerticalAlignment="Center"
+                  Background="{DynamicResource AccentLight}"
+                  BorderBrush="{DynamicResource AccentBrush}"
+                  BorderThickness="1"
+                  FontSize="13"
+                  FontWeight="Medium"
+                  Cursor="Hand"
+                  ToolTip="Visa all transkriberings- och AI-historik">
+            <Button.Style>
+              <Style TargetType="Button">
+                <Setter Property="Template">
+                  <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                      <Border Background="{TemplateBinding Background}" 
+                              BorderBrush="{TemplateBinding BorderBrush}" 
+                              BorderThickness="{TemplateBinding BorderThickness}"
+                              CornerRadius="12"
+                              Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                    </ControlTemplate>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </Button.Style>
+          </Button>
+          
           <Button x:Name="FaqButton" Content="❓" Padding="8,4" Margin="0,0,6,0" ToolTip="Vanliga frågor" />
           <Button x:Name="AboutButton" Content="Om" Padding="10,4" />
         </StackPanel>
