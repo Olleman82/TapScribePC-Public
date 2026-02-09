@@ -1,15 +1,46 @@
 param(
-    [string]$RepoRoot = "D:\\Appar\\wspr-pc",
+    [string]$RepoRoot = "",
     [string]$PublishDir = "", # Will default to RepoRoot\publish if empty
-    [string]$DotNet = "D:\\dotnet\\dotnet",
-    [string]$Configuration = "Release"
+    [string]$DotNet = "",
+    [string]$Configuration = "Release",
+    [string]$LegacyDir = ""
 )
+
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $RepoRoot = (Resolve-Path (Join-Path $scriptDir "..")).Path
+}
 
 if ([string]::IsNullOrEmpty($PublishDir)) {
     $PublishDir = Join-Path $RepoRoot "publish"
 }
 
-$legacyDir = "c:\tapscribe"
+if ([string]::IsNullOrWhiteSpace($DotNet)) {
+    $dotNetCandidates = @(
+        "D:\\dotnet\\dotnet.exe",
+        "dotnet"
+    )
+
+    foreach ($candidate in $dotNetCandidates) {
+        if (Test-Path $candidate) {
+            $DotNet = $candidate
+            break
+        }
+
+        if ($candidate -eq "dotnet") {
+            $dotnetCmd = Get-Command "dotnet" -ErrorAction SilentlyContinue
+            if ($dotnetCmd) {
+                $DotNet = "dotnet"
+                break
+            }
+        }
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($DotNet)) {
+    throw "Could not find dotnet. Install .NET SDK or pass -DotNet explicitly."
+}
+
 $distDir = Join-Path $RepoRoot "installer\\dist"
 $zipPath = Join-Path $distDir "TapScribe.zip"
 
@@ -30,10 +61,12 @@ if (Test-Path (Join-Path $PublishDir "createdump.exe")) {
     Remove-Item (Join-Path $PublishDir "createdump.exe") -Force
 }
 
-# Copy to legacy location
-if (Test-Path $legacyDir) { Remove-Item $legacyDir -Recurse -Force }
-Copy-Item -Path $PublishDir -Destination $legacyDir -Recurse -Force
-Write-Host "Copied to legacy path: $legacyDir"
+# Optional copy to legacy location
+if (![string]::IsNullOrWhiteSpace($LegacyDir)) {
+    if (Test-Path $LegacyDir) { Remove-Item $LegacyDir -Recurse -Force }
+    Copy-Item -Path $PublishDir -Destination $LegacyDir -Recurse -Force
+    Write-Host "Copied to legacy path: $LegacyDir"
+}
 
 if (!(Test-Path $distDir)) {
     New-Item -ItemType Directory -Path $distDir | Out-Null

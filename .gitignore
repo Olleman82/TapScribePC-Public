@@ -1,4 +1,6 @@
-# Build results
+# Build output
+[Bb]in/
+[Oo]bj/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -9,171 +11,151 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+publish/
+Publish/
+installer/dist/
+artifacts/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
 
-# Visual Studio cache/options directory
+# IDE/editor
 .vs/
 .vscode/
+*.code-workspace
+.history/
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.rsuser
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+.localhistory/
 
-# Build results
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs/temp/cache
+logs/
+[Ll]og/
+[Ll]ogs/
+*.log
 *.tmp
 *.tmp_proj
-*_wpftmp.csproj
-*.log
-*.vspscc
-*.vssscc
-.builds
+*.temp
+*.bak
+*.old
+*.orig
 *.pidb
 *.svclog
-*.scc
+*.binlog
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+*.pdb
+*.ipdb
+*.iobj
+*.obj
+*.ilk
+*.rsp
+*.sbr
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.aps
+ipch/
+__pycache__/
+*.pyc
 
-# NuGet Packages
+# Packaging artifacts
+*.zip
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
 *.nupkg
 *.snupkg
-**/packages/*
-!**/packages/build/
-*.nuget.props
-*.nuget.targets
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
-*.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
-
-# Publish
-publish/
 *.publishproj
-installer/dist/
+innosetup.exe
 
-# Application specific
-logs/
-*.log
-debug/
-models/**/*.bin
-models/**/*.gguf
-models/**/*.ggml
-models/**/*.onnx
-third_party/models/
-*.zip
-Publish/
+# Text/docs safety (avoid leaking local notes/transcripts)
+docs/
+*.txt
+!README.txt
+!TapScribe_README.txt
+!WsprPc/BuildId.txt
+!scripts/**/README.txt
+!scripts/**/facit_*.txt
+
+# Local/env config
 *.env
 .env
 .env.local
 .env.*.local
 WsprPc/appsettings.json
-WsprPc/bin/
-WsprPc/obj/
 
-# Agentic / AI Tools
+# Agent/internal tooling files
 .agent/
 .gemini/
 .brain/
+.agent_docs/
 AGENTS.md
 CHAT_LOG.md
 CHECKPOINT.md
 todo.md
 todo_whisper.md
 *.prompt.md
+skills/
+*.py
+!scripts/*.py
 
-
-# Documentation / Sensitive Transcripts
-docs/
-*.txt
-!WsprPc/BuildId.txt
-!TapScribe_README.txt
-!README.txt
-
-# Temporary / Build Artifacts
-temp_zip_check/
-build_release/
-scripts/DiarizationBenchmark/build_output.txt
-
-# Internal Testing / Artifacts
-ChunkTest/
-debug/
-logs/
-publish/
-installer/dist/
+# App- and repo-specific generated files
+WsprPc/bin/
+WsprPc/obj/
 WsprPc.Tests/bin/
 WsprPc.Tests/obj/
+scripts/bin/
+scripts/obj/
+scripts/DiarizationBenchmark/build_output.txt
+ChunkTest/
+temp_zip_check/
+build_release/
+build_error.log
+diarization_*.log
+temp_transcript.txt
+old_config.txt
+old_service.txt
+benchmark_result.txt
+Result_*.txt
 
-# Third party binaries (pre-built executables)
+# Models and downloaded runtime assets
+models/**/*.bin
+models/**/*.gguf
+models/**/*.ggml
+models/**/*.onnx
+third_party/models/
+third_party/ffmpeg/
 third_party/whisper.cpp_bin/
 third_party/whisper.cpp_bin_v1.8.2/
 third_party/whisper.cpp_bin_v1.8.2_x64/
 third_party/whisper.cpp_bin_v1.8.2_Win32/
-third_party/whisper.cpp_bin_v1.5.1_x64/
-third_party/whisper.cpp_bin_v1.5.1_Win32/
-!third_party/whisper.cpp_bin_v1.5.1_x64/*.dll
-!third_party/whisper.cpp_bin_v1.5.1_x64/*.exe
-!third_party/whisper.cpp_bin_v1.5.1_Win32/*.dll
-!third_party/whisper.cpp_bin_v1.5.1_Win32/*.exe
-scripts/third_party/
-third_party/ffmpeg/
+third_party/whisper-bin-*.zip
 third_party/whisper.cpp/
-*.zip
 
-
-# Test Outputs (Sensitive Data)
+# Scripts hygiene: keep only selected source files
+scripts/*
+!scripts/package.ps1
+!scripts/*.py
+scripts/third_party/**
 scripts/**/output/
 scripts/**/output_*/
 scripts/**/*_result.txt
@@ -183,231 +165,6 @@ scripts/**/*.txt
 scripts/**/*.md
 !scripts/**/README.md
 
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# JetBrains Rider
-.idea/
-*.sln.iml
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# Local History for Visual Studio Code
-.history/
-
-# Windows Installer files
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-
-# Windows image file caches
-Thumbs.db
-ehthumbs.db
-
-# Folder config file
-Desktop.ini
-
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-
-# VS Code directories
-.vscode/
-
-# User-specific files
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Build results
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
-bld/
-[Bb]in/
-[Oo]bj/
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
-# NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
-
-# Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
-dlldata.c
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# StyleCop
-StyleCopReport.xml
-
-# Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
-*.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
-
-# Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opendb
-*.opensdf
-*.sdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
-
-# Visual Studio profiler
-*.psess
-*.vsp
-*.vspx
-*.sap
-
-# ReSharper
-_ReSharper*/
-*.[Rr]e[Ss]harper
-*.DotSettings.user
-
-# JetBrains Rider
-.idea/
-*.sln.iml
-
-# CodeRush
-.cr/
-
-# Python Tools for Visual Studio (PTVS)
-__pycache__/
-*.pyc
-
-# Cake - Uncomment if you are using it
-# tools/**
-# !tools/packages.config
-
-# Tabs Studio
-*.tss
-
-# Telerik's JustMock configuration file
-*.jmconfig
-
-# BizTalk build output
-*.btp.cs
-*.btm.cs
-*.odx.cs
-*.xsd.cs
-
-# OpenCover UI analysis results
-OpenCover/
-
-# Azure Stream Analytics local run output
-ASALocalRun/
-
-# MSBuild Binary and Structured Log
-*.binlog
-
-# NVidia Nsight GPU debugger configuration file
-*.nvuser
-
-# MFractors (Xamarin productivity tool) working folder
-.mfractor/
-
-# Local History for Visual Studio
-.localhistory/
-
-# BeatPulse healthcheck temp database
-healthchecksdb
-
-# Backup folder for Package Reference Convert tool in Visual Studio 2017
-MigrationBackup/
-
-# Ionide (cross platform F# VS Code tools) working folder
-.ionide/
-
-# Fody - auto-generated XML schema
-FodyWeavers.xsd
-
-# Skills folder (Internal tools)
-skills/
-
-.agent_docs/
-
-# TapScribe Specific Cleanup
-*.zip
-build_error.log
-diarization_*.log
-old_config.txt
-old_service.txt
-temp_transcript.txt
-Result_*.txt
-benchmark_result.txt
-third_party/whisper-bin-*.zip
-scripts/bin/
-scripts/obj/
-
-# TapScribe Scripts Cleanup (Ignore everything except package.ps1)
-scripts/*
-!scripts/package.ps1
-!scripts/third_party/
-
-# Internal Tools
-innosetup.exe
-*.py
-!scripts/*.py
+# Local helper scripts in app folders
 WsprPc/*.ps1
-
+WsprPc/Assets/*.ps1
