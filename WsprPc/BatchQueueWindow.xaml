@@ -1,0 +1,214 @@
+<Window x:Class="WsprPc.BatchQueueWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Batchkö" 
+        Width="700" Height="500" 
+        MinWidth="500" MinHeight="350"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBg}">
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    
+    <!-- DataGrid Professional Styling -->
+    <Style TargetType="DataGridColumnHeader">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="Padding" Value="8,10" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <Style TargetType="DataGridRow">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Style.Triggers>
+        <Trigger Property="IsSelected" Value="True">
+          <Setter Property="Background" Value="#3168D4" /> <!-- Windows Blue highlight -->
+          <Setter Property="Foreground" Value="White" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+
+    <Style TargetType="DataGridCell">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Style.Triggers>
+        <Trigger Property="IsSelected" Value="True">
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="Foreground" Value="White" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+  </Window.Resources>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock Text="Batchkö" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+      <TextBlock Text="Lägg till filer och ställ in antal talare per fil." FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,4,0,0" />
+    </StackPanel>
+    
+    <!-- File List -->
+    <Border Grid.Row="1" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6">
+      <DataGrid x:Name="FileGrid" 
+                AutoGenerateColumns="False" 
+                CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                CanUserReorderColumns="False"
+                HeadersVisibility="Column"
+                GridLinesVisibility="Horizontal"
+                BorderThickness="0"
+                Background="Transparent"
+                RowBackground="Transparent"
+                SelectionMode="Single"
+                HorizontalScrollBarVisibility="Disabled"
+                RowHeight="40">
+        <DataGrid.Resources>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3168D4"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#3168D4"/>
+        </DataGrid.Resources>
+        <DataGrid.Columns>
+          <!-- Filename -->
+          <DataGridTextColumn Header="Fil" Binding="{Binding FileName}" Width="*" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+              <Style TargetType="TextBlock">
+                <Setter Property="ToolTip" Value="{Binding FilePath}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+              </Style>
+            </DataGridTextColumn.ElementStyle>
+          </DataGridTextColumn>
+          
+          <!-- Speaker Count -->
+          <DataGridTemplateColumn Header="Talare" Width="90">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <ComboBox SelectedIndex="{Binding SpeakerCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                          IsEnabled="{Binding IsRemovable}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Foreground="{DynamicResource TextPrimary}"
+                          Margin="6,4">
+                  <ComboBoxItem Content="Auto" />
+                  <ComboBoxItem Content="1" />
+                  <ComboBoxItem Content="2" />
+                  <ComboBoxItem Content="3" />
+                  <ComboBoxItem Content="4" />
+                  <ComboBoxItem Content="5" />
+                </ComboBox>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Threshold -->
+          <DataGridTemplateColumn Header="Känslighet" Width="80">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Text="{Binding DiarizationThreshold, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" 
+                         IsEnabled="{Binding IsRemovable}"
+                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                         Margin="6,4" ToolTip="Lägre värde (0.1) = fler talare. Högre värde (2.0) = färre talare." />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Pitch Protection -->
+          <DataGridTemplateColumn Header="🛡️" Width="40">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <CheckBox IsChecked="{Binding EnablePitchProtection, UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding IsRemovable}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          ToolTip="Könsskydd (Pitch Protection). Förhindrar att manliga och kvinnliga röster slås ihop." />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          
+          <!-- Status -->
+          <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+              <Style TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="FontWeight" Value="Medium" />
+              </Style>
+            </DataGridTextColumn.ElementStyle>
+          </DataGridTextColumn>
+          
+          <!-- Actions -->
+          <DataGridTemplateColumn Header="Åtgärd" Width="90">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                  <!-- View Result (Only visible when complete) -->
+                  <Button Content="👁" Width="28" Height="28"
+                          Background="Transparent" BorderThickness="0"
+                          Foreground="{DynamicResource AccentColor}"
+                          Visibility="{Binding CanViewResult, Converter={StaticResource BoolToVisibility}}"
+                          Click="ViewResult_Click"
+                          Cursor="Hand"
+                          ToolTip="Visa transkribering"
+                          Margin="0,0,4,0">
+                  </Button>
+                  
+                  <!-- Menu Button (Always visible) -->
+                  <Button Content="⋮" Width="28" Height="28"
+                          Background="Transparent" BorderThickness="0"
+                          Foreground="{DynamicResource TextPrimary}"
+                          FontSize="16" FontWeight="Bold"
+                          Click="ItemMenu_Click"
+                          Cursor="Hand"
+                          Visibility="{Binding IsRemovable, Converter={StaticResource BoolToVisibility}}"
+                          ToolTip="Fler alternativ">
+                     <Button.ContextMenu>
+                       <ContextMenu>
+                         <MenuItem Header="Duplicera" Click="DuplicateItem_Click" />
+                         <MenuItem Header="Skapa experiment..." Click="CreateExperiment_Click" />
+                         <Separator />
+                         <MenuItem Header="Ta bort" Click="RemoveItem_Click" Foreground="Red" />
+                       </ContextMenu>
+                     </Button.ContextMenu>
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+    
+    <!-- Add Files Button -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
+      <Button x:Name="AddFilesButton" Content="+ Lägg till filer" Style="{StaticResource PrimaryButton}" Padding="16,8" Click="AddFiles_Click" />
+      <TextBlock x:Name="FileCountText" Text="0 filer i kö" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="13" Foreground="{DynamicResource TextSecondary}" />
+    </StackPanel>
+    
+    <!-- Options -->
+    <StackPanel Grid.Row="3" Margin="0,20,0,0">
+      <CheckBox x:Name="AutoSaveCheckBox" Content="Spara automatiskt bredvid källfilen (.txt)" IsChecked="True" FontSize="13" />
+      <CheckBox x:Name="CloseOnCompleteCheckBox" Content="Stäng appen när kört klart" Margin="0,10,0,0" FontSize="13" />
+      <CheckBox x:Name="DetectMeetingTypeCheckBox" Content="Detektera mötestyp (justerar känslighet för fysiska möten)" Margin="0,10,0,0" FontSize="13" 
+                ToolTip="Analyserar ljudet för att avgöra om det är ett fysiskt eller digitalt möte. Fysiska möten får automatiskt justerad talaridentifiering." />
+    </StackPanel>
+    
+    <!-- Footer -->
+    <Grid Grid.Row="4" Margin="0,16,0,0">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+        <Button x:Name="CancelButton" Content="Avbryt" Padding="14,7" Click="Cancel_Click" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button x:Name="StartBatchButton" Content="Starta batch" Style="{StaticResource PrimaryButton}" Padding="14,7" Click="StartBatch_Click" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

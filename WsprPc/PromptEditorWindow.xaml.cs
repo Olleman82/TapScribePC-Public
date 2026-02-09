@@ -58,9 +58,23 @@ public partial class PromptEditorWindow : Window
             GeminiModelBox.Text = existing.GeminiModel;
             GeminiThinkingCheck.IsChecked = existing.GeminiUseThinking;
             GeminiGroundingCheck.IsChecked = existing.GeminiUseGrounding;
+            IsMailPromptCheck.IsChecked = existing.IsMailPrompt;
+            if (existing.IsMailPrompt)
+            {
+                GeminiThinkingCheck.IsChecked = true;
+                GeminiThinkingCheck.IsEnabled = false;
+                GeminiGroundingCheck.IsChecked = true;
+                GeminiGroundingCheck.IsEnabled = false;
+            }
+            OpenAiModelBox.Text = existing.OpenAiModel;
+            GeminiGroundingCheck.IsChecked = existing.GeminiUseGrounding;
             OpenAiModelBox.Text = existing.OpenAiModel;
             OpenAiReasoningCombo.SelectedItem = existing.OpenAiReasoningEffort;
             ProviderCombo.SelectedItem = existing.Provider.ToString();
+            SendToWebhookCheck.IsChecked = existing.SendToWebhook;
+            WebhookUrlBox.Text = existing.WebhookUrl;
+            WebhookTokenBox.Text = existing.WebhookToken;
+            SendRawTextCheck.IsChecked = existing.SendRawText;
         }
         else
         {
@@ -87,6 +101,29 @@ public partial class PromptEditorWindow : Window
         UpdateOpenAiWarning();
         UpdateProviderVisibility();
 
+        SendToWebhookCheck.Checked += (_, _) => UpdateWebhookVisibility();
+        SendToWebhookCheck.Unchecked += (_, _) => UpdateWebhookVisibility();
+        SendRawTextCheck.Checked += (_, _) => UpdateProviderVisibility();
+        SendRawTextCheck.Unchecked += (_, _) => UpdateProviderVisibility();
+        UpdateWebhookVisibility();
+        
+        // Mail prompt logic
+        IsMailPromptCheck.Checked += (_, _) =>
+        {
+            // Auto-enable and lock Thinking + Grounding
+            GeminiThinkingCheck.IsChecked = true;
+            GeminiThinkingCheck.IsEnabled = false;
+            GeminiGroundingCheck.IsChecked = true;
+            GeminiGroundingCheck.IsEnabled = false;
+        };
+        
+        IsMailPromptCheck.Unchecked += (_, _) =>
+        {
+            // Unlock controls (keep them checked or not is up to user, but let's unlock)
+            GeminiThinkingCheck.IsEnabled = true;
+            GeminiGroundingCheck.IsEnabled = true;
+        };
+
         OkButton.Click += (_, _) =>
         {
             if (string.IsNullOrWhiteSpace(TitleBox.Text))
@@ -105,10 +142,19 @@ public partial class PromptEditorWindow : Window
                 : GeminiModelBox.Text.Trim();
             Result.GeminiUseThinking = GeminiThinkingCheck.IsChecked == true;
             Result.GeminiUseGrounding = GeminiGroundingCheck.IsChecked == true;
+            Result.IsMailPrompt = IsMailPromptCheck.IsChecked == true;
             Result.OpenAiModel = string.IsNullOrWhiteSpace(OpenAiModelBox.Text)
                 ? "gpt-5-mini"
                 : OpenAiModelBox.Text.Trim();
             Result.OpenAiReasoningEffort = OpenAiReasoningCombo.SelectedItem?.ToString() ?? "minimal";
+
+            Result.OpenAiReasoningEffort = OpenAiReasoningCombo.SelectedItem?.ToString() ?? "minimal";
+
+            // Webhook
+            Result.SendToWebhook = SendToWebhookCheck.IsChecked == true;
+            Result.WebhookUrl = WebhookUrlBox.Text.Trim();
+            Result.WebhookToken = WebhookTokenBox.Text.Trim();
+            Result.SendRawText = SendRawTextCheck.IsChecked == true;
 
             if (Enum.TryParse(ProviderCombo.SelectedItem?.ToString(), out AiProvider provider))
                 Result.Provider = provider;
@@ -165,11 +211,31 @@ public partial class PromptEditorWindow : Window
         OpenAiWarningText.Text = "";
     }
 
+    private void UpdateWebhookVisibility()
+    {
+        bool useWebhook = SendToWebhookCheck.IsChecked == true;
+        WebhookSettingsPanel.Visibility = useWebhook ? Visibility.Visible : Visibility.Collapsed;
+        UpdateProviderVisibility();
+    }
+
     private void UpdateProviderVisibility()
     {
         if (!Enum.TryParse(ProviderCombo.SelectedItem?.ToString(), out AiProvider provider))
             provider = AiProvider.Gemini;
 
+        bool sendRaw = SendToWebhookCheck.IsChecked == true && SendRawTextCheck.IsChecked == true;
+        
+        if (sendRaw)
+        {
+            GeminiSettingsPanel.Visibility = Visibility.Collapsed;
+            OpenAiSettingsPanel.Visibility = Visibility.Collapsed;
+            OpenAiReasoningPanel.Visibility = Visibility.Collapsed;
+            OpenAiWarningText.Visibility = Visibility.Collapsed;
+            InstructionsPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        InstructionsPanel.Visibility = Visibility.Visible;
         bool isGemini = provider == AiProvider.Gemini;
         GeminiSettingsPanel.Visibility = isGemini ? Visibility.Visible : Visibility.Collapsed;
         OpenAiSettingsPanel.Visibility = isGemini ? Visibility.Collapsed : Visibility.Visible;

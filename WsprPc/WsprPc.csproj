@@ -10,7 +10,7 @@
     <AssemblyName>TapScribe</AssemblyName>
     <Product>TapScribe</Product>
     <ApplicationTitle>TapScribe</ApplicationTitle>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>false</PublishSingleFile>
@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageReference Include="Whisper.net" Version="1.5.0" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.5.0" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.12.22" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\tapscribe.ico" />
-    <Resource Include="..\aiolle_transparent.png" Link="aiolle_transparent.png" />
+    <Resource Include="Assets\aiolle_transparent.png" />
     <None Include="..\TapScribe_README.txt" Link="TapScribe_README.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="BuildId.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\third_party\whisper.cpp_bin_v1.5.1_x64\whisper-cli.exe" Link="whisper-cli.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />

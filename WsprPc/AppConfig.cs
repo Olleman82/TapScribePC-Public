@@ -9,7 +9,7 @@ public sealed class AppConfig
 {
     private const string DefaultUpdateRepoOwner = "Olleman82";
     private const string DefaultUpdateRepoName = "TapScribePC-Public";
-    public const int CurrentSettingsVersion = 6;
+    public const int CurrentSettingsVersion = 9;
 
     public int SettingsVersion { get; set; } = CurrentSettingsVersion;
     public string? WhisperCliPath { get; set; }
@@ -41,6 +41,20 @@ public sealed class AppConfig
     public int? ManualThreads { get; set; }
     public bool DarkMode { get; set; }
     public bool EnableVad { get; set; } = true;
+    
+    // Diarization settings
+    public string? SherpaModelsPath { get; set; }
+    public bool SherpaModelsDownloaded { get; set; }
+    public double DiarizationThreshold { get; set; } = 1.15;
+    public double DiarizationGhostCleanupSeconds { get; set; } = 15.0;
+    public bool DiarizationPitchProtection { get; set; } = true;
+    public double DiarizationMinDurationOn { get; set; } = 0.15;
+    public double DiarizationMinDurationOff { get; set; } = 0.10;
+    public string? FfmpegPath { get; set; }
+    
+    // Meeting type detection
+    public bool DetectMeetingType { get; set; } = true;
+    public double PhysicalMeetingThresholdAdjustment { get; set; } = 0.10;
 
     public static AppConfig Load(string path)
     {
@@ -121,6 +135,40 @@ public sealed class AppConfig
         {
             EnableVad = true;
             SettingsVersion = 5;
+            changed = true;
+        }
+
+        if (SettingsVersion < 6)
+        {
+            SettingsVersion = 6;
+            changed = true;
+        }
+
+        if (SettingsVersion < 7)
+        {
+            DiarizationThreshold = 0.75;
+            DiarizationGhostCleanupSeconds = 5.0;
+            DiarizationPitchProtection = true;
+            SettingsVersion = 7;
+            changed = true;
+        }
+
+        if (SettingsVersion < 8)
+        {
+            // Test 4 alignment: better defaults for speaker separation
+            DiarizationGhostCleanupSeconds = 15.0;
+            DiarizationMinDurationOn = 0.15;
+            DiarizationMinDurationOff = 0.10;
+            SettingsVersion = 8;
+            changed = true;
+        }
+
+        if (SettingsVersion < 9)
+        {
+            // Meeting type detection
+            DetectMeetingType = true;
+            PhysicalMeetingThresholdAdjustment = 0.10;
+            SettingsVersion = 9;
             changed = true;
         }
 

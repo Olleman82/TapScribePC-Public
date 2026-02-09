@@ -8,6 +8,9 @@ Appen är byggd för yrkesverksamma som behöver snabb, säker och privat dikter
 
 ## ✨ Nyckelfunktioner
 
+- **Mötestranskribering**: Transkribera hela möten där appen automatiskt identifierar olika talare och anpassar sig efter om mötet är fysiskt eller digitalt.
+- **Historik**: Alla dina transkriberingar sparas lokalt så du enkelt kan gå tillbaka och hitta vad som sades.
+- **Automatisering**: Skapa prompter som automatiskt öppnar mailutkast eller skickar data till webhooks.
 - **Svenska i Fokus**: Speciellt anpassad för svenska språket genom integration av KBLabs finlirade modeller.
 - **Blixtsnabb Transkribering**: Optimerad för lokal CPU-exekvering via Whisper GGUF.
 - **Hold-to-Talk**: Enkelt arbetsflöde—håll ner en knapp för att prata, släpp för att klistra in texten direkt där din markör befinner sig.

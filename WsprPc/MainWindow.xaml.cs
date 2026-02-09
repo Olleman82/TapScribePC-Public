@@ -19,6 +19,7 @@ using WsprPc.Models;
 using WsprPc.Services;
 using WsprPc.Services.Ai;
 using WsprPc.Services.Vad;
+using WsprPc.Services.Diarization;
 using WsprPc.Stores;
 
 namespace WsprPc;
@@ -38,6 +39,8 @@ public partial class MainWindow : Window
     private AppLogger? _logger;
     private readonly PromptStore _promptStore;
     private readonly MemoryStore _memoryStore;
+    private readonly HistoryStore _historyStore;
+    private readonly MailService _mailService; // Added
     private List<PromptDefinition> _prompts = new();
     private List<MemoryItem> _memory = new();
     private PromptDefinition? _defaultPrompt;
@@ -56,6 +59,14 @@ public partial class MainWindow : Window
     private bool _isStartingUp = false;
     private bool _welcomeShowing = false;
     private string? _clipboardContext;
+    
+    // File Transcription (Diarization) fields
+    private FileTranscriptionService? _fileTranscriptionService;
+    private string? _selectedAudioFilePath;
+    private CancellationTokenSource? _fileTranscriptionCts;
+    private TimeSpan _lastAudioDuration;
+    private TimeSpan _lastProcessingTime;
+    private bool _meetingTranscriptionRunning;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -69,6 +80,7 @@ public partial class MainWindow : Window
         var polisher = new TextPolisher();
         var paster = new PasteInjector();
         _engine = new WhisperNetEngine();
+        _mailService = new MailService(); // Added
 
         string dataDir = GetAppDataDir();
         _configPath = Path.Combine(dataDir, "appsettings.json");
@@ -139,6 +151,7 @@ public partial class MainWindow : Window
 
         _promptStore = new PromptStore(Path.Combine(dataDir, "prompts.json"));
         _memoryStore = new MemoryStore(Path.Combine(dataDir, "memory.json"));
+        _historyStore = new HistoryStore(Path.Combine(dataDir, "history.json"));
 
         InitializeDownloadUi();
         InitializeModelSelector();
@@ -150,8 +163,6 @@ public partial class MainWindow : Window
 
         DownloadModelButton.Click += async (_, _) => await DownloadSelectedModelAsync();
         AboutButton.Click += (_, _) => ShowAbout();
-        PromptInfoButton.Click += (_, _) => ShowPromptInfo();
-        MemoryInfoButton.Click += (_, _) => ShowMemoryInfo();
         FaqButton.Click += (_, _) => { var w = new FaqWindow { Owner = this }; w.ShowDialog(); };
 
         AddPromptButton.Click += (_, _) => AddPrompt();
@@ -169,6 +180,20 @@ public partial class MainWindow : Window
         DarkModeToggle.Unchecked += (_, _) => ApplyTheme(false);
         DarkModeToggle.IsChecked = _config.DarkMode;
         if (_config.DarkMode) ApplyTheme(true);
+        
+        // File Transcription (Möten) tab event handlers
+        SelectAudioFileButton.Click += (_, _) => SelectAudioFile();
+        StartFileTranscriptionButton.Click += async (_, _) => await StartFileTranscriptionAsync();
+        CancelFileTranscriptionButton.Click += (_, _) => CancelFileTranscription();
+        ViewTranscriptionButton.Click += (_, _) => ViewTranscriptionResult();
+        SaveFileTranscriptionButton.Click += (_, _) => SaveFileTranscriptionResult();
+        BatchQueueButton.Click += (_, _) => OpenBatchQueue();
+        DownloadDiarizationModelsButton.Click += async (_, _) => await DownloadDiarizationModelsAsync();
+        HistoryButton.Click += (_, _) => ShowHistory();
+        
+        // Initialize file transcription service
+        InitializeFileTranscriptionService();
+        InitializeDiarizationAdvancedUi();
 
         Loaded += (_, _) => ApplyTitleBarTheme(_config.DarkMode);
         ContentRendered += (_, _) => _ = InitializeStartupFlowAsync();
@@ -361,6 +386,21 @@ private static bool IsUsablePath(string path)
         SilenceDurationTextBox.Text = _config.SilenceDurationSeconds.ToString("0.0", CultureInfo.CurrentCulture);
         EnableVadCheckBox.IsChecked = _config.EnableVad;
         ManualThreadsTextBox.Text = _config.ManualThreads?.ToString() ?? string.Empty;
+
+        // Diarization
+        DiarizationThresholdSlider.Value = _config.DiarizationThreshold;
+        DiarizationCleanupTextBox.Text = _config.DiarizationGhostCleanupSeconds.ToString("0.0", CultureInfo.CurrentCulture);
+        DiarizationMinDurationOnTextBox.Text = _config.DiarizationMinDurationOn.ToString("0.00", CultureInfo.CurrentCulture);
+        DiarizationMinDurationOffTextBox.Text = _config.DiarizationMinDurationOff.ToString("0.00", CultureInfo.CurrentCulture);
+        DiarizationPitchProtectionCheckBox.IsChecked = _config.DiarizationPitchProtection;
+
+    // Meeting type detection
+    DetectMeetingTypeCheckBox.IsChecked = _config.DetectMeetingType;
+    PhysicalMeetingAdjustmentTextBox.Text = _config.PhysicalMeetingThresholdAdjustment.ToString("0.00", CultureInfo.CurrentCulture);
+    MeetingTypeAdjustmentPanel.Visibility = _config.DetectMeetingType ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+    DetectMeetingTypeCheckBox.Checked += (_, _) => { MeetingTypeAdjustmentPanel.Visibility = System.Windows.Visibility.Visible; AutoSaveConfig(); };
+    DetectMeetingTypeCheckBox.Unchecked += (_, _) => { MeetingTypeAdjustmentPanel.Visibility = System.Windows.Visibility.Collapsed; AutoSaveConfig(); };
+    PhysicalMeetingAdjustmentTextBox.LostFocus += (_, _) => AutoSaveConfig();
 
         RegisterHotkeys();
         UpdateHotkeyLabel();
@@ -608,6 +648,14 @@ private static bool IsUsablePath(string path)
         // VAD
         SilenceThresholdTextBox.LostFocus += (_, _) => AutoSaveConfig();
         SilenceDurationTextBox.LostFocus += (_, _) => AutoSaveConfig();
+
+        // Diarization Advanced
+        DiarizationThresholdSlider.ValueChanged += (_, _) => AutoSaveConfig();
+        DiarizationCleanupTextBox.LostFocus += (_, _) => AutoSaveConfig();
+        DiarizationMinDurationOnTextBox.LostFocus += (_, _) => AutoSaveConfig();
+        DiarizationMinDurationOffTextBox.LostFocus += (_, _) => AutoSaveConfig();
+        DiarizationPitchProtectionCheckBox.Checked += (_, _) => AutoSaveConfig();
+        DiarizationPitchProtectionCheckBox.Unchecked += (_, _) => AutoSaveConfig();
     }
 
     private void AutoSaveConfig()
@@ -712,6 +760,17 @@ private static bool IsUsablePath(string path)
             var p = _prompts.FirstOrDefault(x => x.Title == selectedTitle);
             if (p != null) _config.LastPromptId = p.Id;
         }
+
+        // Diarization
+        _config.DiarizationThreshold = DiarizationThresholdSlider.Value;
+        _config.DiarizationGhostCleanupSeconds = ReadDoubleOrFallback(DiarizationCleanupTextBox, _config.DiarizationGhostCleanupSeconds, "Diarization städning");
+        _config.DiarizationMinDurationOn = ReadDoubleOrFallback(DiarizationMinDurationOnTextBox, _config.DiarizationMinDurationOn, "Kortaste tal");
+        _config.DiarizationMinDurationOff = ReadDoubleOrFallback(DiarizationMinDurationOffTextBox, _config.DiarizationMinDurationOff, "Kortaste paus");
+        _config.DiarizationPitchProtection = DiarizationPitchProtectionCheckBox.IsChecked == true;
+
+        // Meeting type detection
+        _config.DetectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
+        _config.PhysicalMeetingThresholdAdjustment = ReadDoubleOrFallback(PhysicalMeetingAdjustmentTextBox, _config.PhysicalMeetingThresholdAdjustment, "Fysiskt möte-justering");
     }
 
     private void SaveSettings()
@@ -1640,6 +1699,12 @@ private static bool IsUsablePath(string path)
         dialog.ShowDialog();
     }
 
+    private void ShowHistory()
+    {
+        var dialog = new HistoryWindow(_historyStore) { Owner = this };
+        dialog.ShowDialog();
+    }
+
     private void ShowAiInfo()
     {
         string aiKey = _config.AiHotkey;
@@ -1650,28 +1715,23 @@ private static bool IsUsablePath(string path)
         WpfMessageBox.Show(info, "AI-bearbetning", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    private void ShowPromptInfo()
-    {
-        const string info =
-            "Promptar styr hur AI:n formaterar texten.\n\n" +
-            "Exempel: Sammanfattning, WhatsApp, Mail.\n" +
-            "Välj en prompt som standard om du vill slippa väljaren.";
-        WpfMessageBox.Show(info, "Prompt‑hjälp", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
-    private void ShowMemoryInfo()
-    {
-        const string info =
-            "Minne läggs till som extra kontext i prompten.\n\n" +
-            "Bra för namn, preferenser och återkommande fakta.\n" +
-            "Exempel: \"Bokningslänk: https://aiolle.se/bokning\".\n" +
-            "Säger du: \"Be dem boka ett möte\" → AI kan svara: \"Hej! Boka gärna här: https://aiolle.se/bokning\".\n\n" +
-            "Aktiveras per prompt via \"Använd minne\".";
-        WpfMessageBox.Show(info, "Minne‑hjälp", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
 
     private void OnDirectHotkeyDown()
     {
+        if (_meetingTranscriptionRunning)
+        {
+            _logger?.Info("Direkt: key down blockerad (mötestranskribering pågår)");
+            Dispatcher.InvokeAsync(() =>
+            {
+                WpfMessageBox.Show(
+                    "Realtidstranskribering är inte tillgänglig under pågående mötestranskribering.\n\nVänta tills mötestranskriberingen är klar, eller avbryt den först.",
+                    "TapScribe",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            });
+            return;
+        }
+
         if (_controller.IsRecording)
             return;
 
@@ -1716,6 +1776,12 @@ private static bool IsUsablePath(string path)
             {
                 _logger?.Info($"Direkt: Fick resultat ({result.Length} tecken).");
                 Dispatcher.Invoke(() => LastResultText.Text = result);
+                _historyStore.Add(new HistoryItem(
+                    Guid.NewGuid().ToString(),
+                    DateTime.Now,
+                    result,
+                    HistoryItemType.Transcription
+                ));
                 if (IsAutoPasteEnabled())
                 {
                     _logger?.Info($"Direkt: auto-paste {( _controller.LastPasteSucceeded ? "ok" : "misslyckades" )} (mål=0x{_targetWindow.ToInt64():X})");
@@ -1745,6 +1811,20 @@ private static bool IsUsablePath(string path)
 
     private void OnAiHotkeyDown()
     {
+        if (_meetingTranscriptionRunning)
+        {
+            _logger?.Info("AI: key down blockerad (mötestranskribering pågår)");
+            Dispatcher.InvokeAsync(() =>
+            {
+                WpfMessageBox.Show(
+                    "Realtidstranskribering är inte tillgänglig under pågående mötestranskribering.\n\nVänta tills mötestranskriberingen är klar, eller avbryt den först.",
+                    "TapScribe",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            });
+            return;
+        }
+
         _logger?.Info($"AI: key down START (IsRecording={_controller.IsRecording})");
         if (_controller.IsRecording)
         {
@@ -1794,78 +1874,196 @@ private static bool IsUsablePath(string path)
             SetStatus("Fel: " + ex.Message);
         }
 
-        bool resetStatus = true;
-        if (string.IsNullOrWhiteSpace(transcript))
+        bool hasClipboard = !string.IsNullOrWhiteSpace(_clipboardContext);
+        
+        if (string.IsNullOrWhiteSpace(transcript) && !hasClipboard)
         {
             SetStatus("Ingen transkribering.");
             Dispatcher.Invoke(() => LastResultText.Text = "Ingen transkribering fångades.");
             _logger?.Info("AI: ingen transkribering");
-            resetStatus = true; // Still reset later
             await Task.Delay(1500);
+            SetStatus("Väntar");
+            return;
         }
-        else
-        {
-            try
-            {
-                Dispatcher.Invoke(() => LastResultText.Text = transcript);
-                var prompt = PickPrompt();
-                if (prompt == null)
-                {
-                    SetStatus("Ingen prompt vald.");
-                    Dispatcher.Invoke(() => LastResultText.Text = "Ingen prompt vald.");
-                    _logger?.Info("AI: ingen prompt vald");
-                    await Task.Delay(1500);
-                    SetStatus("Väntar");
-                    return;
-                }
 
-                _logger?.Info($"AI: prompt='{prompt.Title}', provider={prompt.Provider}, model={(prompt.Provider == AiProvider.Gemini ? prompt.GeminiModel : prompt.OpenAiModel)}");
-                string aiText = await ProcessWithAiAsync(transcript, prompt);
-                if (!string.IsNullOrWhiteSpace(aiText))
+        var prompt = PickPrompt();
+        if (prompt == null)
+        {
+            SetStatus("Ingen prompt vald.");
+            Dispatcher.Invoke(() => LastResultText.Text = "Ingen prompt vald.");
+            _logger?.Info("AI: ingen prompt vald");
+            await Task.Delay(1500);
+            SetStatus("Väntar");
+            return;
+        }
+
+        _logger?.Info($"AI: prompt='{prompt.Title}', provider={prompt.Provider}");
+
+        // Reset status immediately to allow new inputs
+        SetStatus("Väntar");
+        Dispatcher.Invoke(() => LastResultText.Text = "Bearbetar i bakgrunden...");
+
+        // Run AI/Webhook in background
+        // Capture UI values on main thread to avoid cross-thread exceptions
+        string? geminiKey = GetGeminiKey();
+        string? openAiKey = GetOpenAiKey();
+        bool autoPaste = IsAutoPasteEnabled();
+
+        // Capture original prompt object for ID reference later
+        var originalPrompt = prompt;
+
+        _ = Task.Run(async () =>
+        {
+            try 
+            {
+                string resultText;
+                if (prompt.SendRawText)
                 {
-                    _config.LastPromptId = prompt.Id;
-                    _config.Save(_configPath);
-                    if (IsAutoPasteEnabled())
+                    resultText = transcript ?? string.Empty;
+                    if (prompt.UseClipboard && hasClipboard)
                     {
-                        _controller.PasteResult(aiText);
-                        _logger?.Info($"AI: auto-paste {(_controller.LastPasteSucceeded ? "ok" : "misslyckades")} (mål=0x{_targetWindow.ToInt64():X})");
-                        if (!_controller.LastPasteSucceeded)
-                            SetStatus("Kunde inte klistra in — texten finns i urklipp.");
-                        else
-                            SetStatus("Väntar");
+                        if (!string.IsNullOrWhiteSpace(resultText))
+                            resultText += "\n\n";
+                        resultText += _clipboardContext;
+                        _logger?.Info("AI: Raw Text inkluderar clipboard");
                     }
-                    else
-                    {
-                        SetStatus("Väntar");
-                    }
-                    Dispatcher.Invoke(() => LastResultText.Text = aiText);
-                    resetStatus = false; // Already handled status
+                    _logger?.Info("AI: Skickar raw text");
                 }
                 else
                 {
-                    SetStatus("AI‑svaret var tomt.");
-                    Dispatcher.Invoke(() => LastResultText.Text = "AI‑svaret var tomt.");
-                    _logger?.Info("AI: tomt svar");
-                    await Task.Delay(1500);
-                    resetStatus = true;
+                    // Create a clone/copy so we can modify it for this request without affecting the stored prompt
+                    var workPrompt = prompt; 
+                    
+                    // For mail prompts, we inject special system instructions
+                    if (prompt.IsMailPrompt)
+                    {
+                         // We don't modify the stored prompt, but logic inside ProcessWithAiAsync handles the injection
+                         // based on IsMailPrompt flag.
+                    }
+                    
+                    resultText = await ProcessWithAiAsync(transcript, prompt, geminiKey, openAiKey);
                 }
+
+                if (string.IsNullOrWhiteSpace(resultText))
+                {
+                    _logger?.Info("AI: tomt svar");
+                    return;
+                }
+
+                // Save last used prompt (use original prompt object for ID)
+                 _config.LastPromptId = originalPrompt.Id;
+                _config.Save(_configPath);
+
+                if (prompt.SendToWebhook && !string.IsNullOrWhiteSpace(prompt.WebhookUrl))
+                {
+                    // Update status for the webhook specifically? No, keep it clean.
+                    bool success = await SendToWebhookAsync(resultText, prompt.WebhookUrl, prompt.WebhookToken);
+                    
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var popup = new TranscriptionResultWindow(
+                            success ? "Webhook skickad!\n\n" + resultText : "Webhook misslyckades!\n\n" + resultText, 
+                            "Webhook-resultat", 
+                            TimeSpan.Zero, 
+                            TimeSpan.Zero);
+                        popup.Show();
+                        popup.Activate();
+                    });
+                }
+                else
+                {
+                if (originalPrompt.IsMailPrompt)
+                {
+                    // Handle mail result
+                    var mailResult = _mailService.ParseMailResponse(resultText);
+                    
+                    if (!string.IsNullOrWhiteSpace(mailResult.EmailTo))
+                    {
+                        Dispatcher.Invoke(() => 
+                        {
+                           bool opened = _mailService.OpenMailClient(
+                               mailResult.EmailTo!, 
+                               mailResult.Subject ?? "", 
+                               mailResult.Body ?? "");
+                               
+                           if (!opened)
+                           {
+                               WpfMessageBox.Show("Kunde inte öppna e-postklienten.", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+                               // Fallback: clipboard?
+                               System.Windows.Clipboard.SetText(resultText);
+                           }
+                        });
+                    }
+                    else
+                    {
+                        // Parse failed / no email found
+                        Dispatcher.Invoke(() => 
+                        {
+                            WpfMessageBox.Show("Kunde inte tolka e-postinformation (ingen mottagare hittades).", "Mail-fel", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            // Fallback: clipboard
+                             System.Windows.Clipboard.SetText(resultText);
+                        });
+                    }
+                }
+                else
+                {
+                    if (autoPaste)
+                    {
+                        Dispatcher.Invoke(() => _controller.PasteResult(resultText));
+                    }
+                }
+                }
+                
+                // Log to history
+                Dispatcher.Invoke(() => _historyStore.Add(new HistoryItem(
+                    Guid.NewGuid().ToString(),
+                    DateTime.Now,
+                    resultText,
+                    HistoryItemType.AI
+                )));
             }
             catch (Exception ex)
             {
-                _logger?.Error("AI: fel i bearbetning", ex);
-                SetStatus("AI‑fel: " + ex.Message);
-                Dispatcher.Invoke(() => LastResultText.Text = "AI‑fel: " + ex.Message);
-                await Task.Delay(3000);
-                resetStatus = true;
+                _logger?.Error("AI: Background task failed", ex);
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                {
+                    WpfMessageBox.Show($"Ett fel inträffade vid AI-bearbetning:\n{ex.Message}", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
-        }
-
-        if (resetStatus)
-        {
-            SetStatus("Väntar");
-        }
+        });
     }
 
+private async Task<bool> SendToWebhookAsync(string text, string url, string token)
+{
+    try
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var json = JsonSerializer.Serialize(new { text });
+        request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Add("X-Webhook-Token", token);
+        }
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+             _logger?.Error($"Webhook failed: {response.StatusCode} {response.ReasonPhrase}");
+             try { 
+                 string body = await response.Content.ReadAsStringAsync();
+                 _logger?.Error($"Webhook response body: {body}");
+             } catch {}
+             return false;
+        }
+        return true;
+    }
+    catch (Exception ex)
+    {
+        _logger?.Error("Webhook error", ex);
+        return false;
+    }
+}
     private PromptDefinition? PickPrompt()
     {
         if (_prompts.Count == 0)
@@ -1887,25 +2085,23 @@ private static bool IsUsablePath(string path)
         return selected;
     }
 
-    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt)
+    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt, string? geminiKey, string? openAiKey)
     {
         BuildPromptBlocks(prompt, text, out var systemInstruction, out var bodyText);
 
         if (prompt.Provider == AiProvider.Gemini)
         {
-            string? key = GetGeminiKey();
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(geminiKey))
                 throw new InvalidOperationException("Gemini‑nyckel saknas.");
 
             return await _geminiClient.GenerateAsync(
-                key,
+                geminiKey,
                 prompt.GeminiModel,
                 CombineForGemini(systemInstruction, bodyText),
-                prompt.GeminiUseThinking,
-                prompt.GeminiUseGrounding);
+                prompt.IsMailPrompt || prompt.GeminiUseThinking, // Force thinking for mail
+                prompt.IsMailPrompt || prompt.GeminiUseGrounding); // Force grounding for mail
         }
 
-        string? openAiKey = GetOpenAiKey();
         if (string.IsNullOrWhiteSpace(openAiKey))
             throw new InvalidOperationException("OpenAI‑nyckel saknas.");
 
@@ -1936,6 +2132,20 @@ private static bool IsUsablePath(string path)
     private void BuildPromptBlocks(PromptDefinition prompt, string transcript, out string systemInstruction, out string bodyText)
     {
         systemInstruction = prompt.SystemInstruction.Trim();
+        
+        if (prompt.IsMailPrompt)
+        {
+            // Inject mail system prompt logic
+            string mailInstructions = _mailService.BuildMailSystemPrompt(prompt.UserInstruction);
+            // If user has custom system instructions, append them?
+            // Actually, for mail, the mail system prompt is primary.
+            // We can append the user's custom system instruction to the end of the built-in one.
+            if (!string.IsNullOrWhiteSpace(systemInstruction))
+            {
+                 mailInstructions += "\n\n" + systemInstruction;
+            }
+            systemInstruction = mailInstructions;
+        }
 
         string memoryBlock = string.Empty;
         if (prompt.UseMemory && _memory.Count > 0)
@@ -2126,9 +2336,308 @@ private static bool IsUsablePath(string path)
         string fallback = Path.Combine(baseDir, "whisper_win32", "whisper-cli.exe");
         return File.Exists(fallback) ? fallback : null;
     }
+
+    #region File Transcription (Diarization)
+    private void InitializeDiarizationAdvancedUi()
+    {
+        // Add listeners for Diarization settings
+        DiarizationThresholdSlider.ValueChanged += (s, e) => AutoSaveConfig();
+        DiarizationCleanupTextBox.LostFocus += (s, e) => AutoSaveConfig();
+        DiarizationPitchProtectionCheckBox.Checked += (s, e) => AutoSaveConfig();
+        DiarizationPitchProtectionCheckBox.Unchecked += (s, e) => AutoSaveConfig();
+    }
+
+    private void InitializeFileTranscriptionService()
+    {
+        _fileTranscriptionService = new FileTranscriptionService(_engine, GetAppDataDir());
+        CheckDiarizationModelsStatus();
+    }
+
+    private void CheckDiarizationModelsStatus()
+    {
+        if (_fileTranscriptionService != null && !_fileTranscriptionService.ModelsReady)
+        {
+            DiarizationModelBanner.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            DiarizationModelBanner.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task DownloadDiarizationModelsAsync()
+    {
+        if (_fileTranscriptionService == null) return;
+
+        DownloadDiarizationModelsButton.IsEnabled = false;
+        DiarizationModelDownloadProgress.Visibility = Visibility.Visible;
+        DiarizationModelDownloadStatus.Text = "Laddar ner verktyg och modeller...";
+
+        var progress = new Progress<(int percent, string status)>(p =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                DiarizationModelDownloadProgress.Value = p.percent;
+                DiarizationModelDownloadStatus.Text = p.status;
+            });
+        });
+
+        try
+        {
+            await _fileTranscriptionService.EnsureModelsAsync(progress);
+            DiarizationModelBanner.Visibility = Visibility.Collapsed;
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("Diarization dependency download failed", ex);
+            WpfMessageBox.Show($"Kunde inte ladda ner verktyg: {ex.Message}", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            DownloadDiarizationModelsButton.IsEnabled = true;
+            DiarizationModelDownloadProgress.Visibility = Visibility.Collapsed;
+            DiarizationModelDownloadStatus.Text = "";
+        }
+    }
+
+    private async Task StartFileTranscriptionAsync()
+    {
+        if (_fileTranscriptionService == null || string.IsNullOrEmpty(_selectedAudioFilePath))
+            return;
+
+        // Check if models need to be downloaded
+        if (!_fileTranscriptionService.ModelsReady)
+        {
+            DiarizationModelBanner.Visibility = Visibility.Visible;
+            return;
+        }
+
+        Stopwatch sw = new Stopwatch();
+        try
+        {
+            _meetingTranscriptionRunning = true;
+            _fileTranscriptionCts = new CancellationTokenSource();
+            
+            // Get audio length
+            TimeSpan audioDuration = TimeSpan.Zero;
+            try
+            {
+                using var reader = new NAudio.Wave.AudioFileReader(_selectedAudioFilePath);
+                audioDuration = reader.TotalTime;
+            }
+            catch { }
+            
+            // Update UI state
+            StartFileTranscriptionButton.IsEnabled = false;
+            SelectAudioFileButton.IsEnabled = false;
+            CancelFileTranscriptionButton.Visibility = Visibility.Visible;
+            FileTranscriptionProgressPanel.Visibility = Visibility.Visible;
+            FileTranscriptionStatusText.Text = "Laddar ner verktyg...";
+            FileTranscriptionPercentText.Text = "0%";
+            TranscriptionElapsedTimeText.Text = "⏱️ 00:00";
+            _lastAudioDuration = audioDuration;
+
+            // Ensure dependencies (including FFmpeg)
+            if (!_fileTranscriptionService.ModelsReady)
+            {
+                await DownloadDiarizationModelsAsync();
+                if (!_fileTranscriptionService.ModelsReady) throw new InvalidOperationException("Kunde inte ladda ner nödvändiga verktyg.");
+            }
+
+            // Get expected speaker count (Auto = 0, 1 = 1, 2 = 2, ...)
+            int? expectedSpeakers = null;
+            if (SpeakerCountCombo.SelectedIndex > 0)
+            {
+                expectedSpeakers = SpeakerCountCombo.SelectedIndex;
+            }
+
+            sw.Start();
+            
+            // Create a timer to update elapsed time UI
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer.Tick += (s, e) => {
+                TranscriptionElapsedTimeText.Text = $"⏱️ {sw.Elapsed:mm\\:ss}";
+            };
+            timer.Start();
+
+            var progress = new Progress<(int percent, string status)>(p =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    FileTranscriptionProgressBar.Value = p.percent;
+                    FileTranscriptionStatusText.Text = p.status;
+                    FileTranscriptionPercentText.Text = $"{p.percent}%";
+                });
+            });
+
+            // Sync parameters to service
+            _fileTranscriptionService.ClusteringThreshold = (float)_config.DiarizationThreshold;
+            _fileTranscriptionService.MinTotalDurationSeconds = _config.DiarizationGhostCleanupSeconds;
+            _fileTranscriptionService.MinDurationOn = (float)_config.DiarizationMinDurationOn;
+            _fileTranscriptionService.MinDurationOff = (float)_config.DiarizationMinDurationOff;
+            _fileTranscriptionService.EnablePitchProtection = _config.DiarizationPitchProtection;
+            _fileTranscriptionService.DetectMeetingType = _config.DetectMeetingType;
+            _fileTranscriptionService.PhysicalMeetingThresholdAdjustment = _config.PhysicalMeetingThresholdAdjustment;
+
+            int numThreads = CalculateCpuThreads();
+            string result = await _fileTranscriptionService.TranscribeAsync(
+                _selectedAudioFilePath,
+                expectedSpeakers,
+                numThreads,
+                progress,
+                _fileTranscriptionCts.Token);
+
+            sw.Stop();
+            timer.Stop();
+
+            // Calculate speed multiplier
+            double speedMultiplier = 0;
+            if (audioDuration.TotalSeconds > 0 && sw.Elapsed.TotalSeconds > 0)
+            {
+                speedMultiplier = audioDuration.TotalSeconds / sw.Elapsed.TotalSeconds;
+            }
+
+            // Show result
+            FileTranscriptionResultText.Text = result;
+            FileTranscriptionResultPanel.Visibility = Visibility.Visible;
+            
+            // Set stats text
+            TranscriptionStatsText.Text = $"Tid: {sw.Elapsed:mm\\:ss} • Hastighet: {speedMultiplier:F1}x";
+            _lastProcessingTime = sw.Elapsed;
+            
+            _logger?.Info($"File transcription completed: {result.Length} chars. Speed: {speedMultiplier:F1}x");
+        }
+        catch (OperationCanceledException)
+        {
+            _logger?.Info("File transcription cancelled");
+            FileTranscriptionStatusText.Text = "Avbruten";
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("File transcription failed", ex);
+            FileTranscriptionStatusText.Text = $"Fel: {ex.Message}";
+            WpfMessageBox.Show(
+                $"Transkribering misslyckades:\n{ex.Message}",
+                "Fel",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            // Reset meeting transcription flag
+            _meetingTranscriptionRunning = false;
+            
+            // Reset UI state
+            StartFileTranscriptionButton.IsEnabled = true;
+            SelectAudioFileButton.IsEnabled = true;
+            CancelFileTranscriptionButton.Visibility = Visibility.Collapsed;
+            FileTranscriptionProgressPanel.Visibility = Visibility.Collapsed;
+            _fileTranscriptionCts?.Dispose();
+            _fileTranscriptionCts = null;
+        }
+    }
+
+    private void SelectAudioFile()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Välj ljudfil",
+            Filter = "Ljudfiler (*.mp3;*.wav;*.m4a;*.aac;*.mp4)|*.mp3;*.wav;*.m4a;*.aac;*.mp4|Alla filer (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            _selectedAudioFilePath = dialog.FileName;
+            SelectedAudioFileText.Text = Path.GetFileName(dialog.FileName);
+            StartFileTranscriptionButton.IsEnabled = true;
+        }
+    }
+
+    private void CancelFileTranscription()
+    {
+        _fileTranscriptionCts?.Cancel();
+    }
+
+    private void CopyFileTranscriptionResult()
+    {
+        string text = FileTranscriptionResultText.Text;
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            System.Windows.Clipboard.SetText(text);
+            _trayIcon?.ShowBalloon("TapScribe PC", "Text kopierad till urklipp!");
+        }
+    }
+
+    private void SaveFileTranscriptionResult()
+    {
+        string text = FileTranscriptionResultText.Text;
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Spara transkription",
+            Filter = "Textfil (*.txt)|*.txt|Alla filer (*.*)|*.*",
+            DefaultExt = ".txt",
+            FileName = Path.GetFileNameWithoutExtension(_selectedAudioFilePath ?? "transkription") + "_transkription.txt"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                File.WriteAllText(dialog.FileName, text);
+                _trayIcon?.ShowBalloon("TapScribe PC", $"Sparad till {Path.GetFileName(dialog.FileName)}");
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error("Failed to save transcription", ex);
+                WpfMessageBox.Show($"Kunde inte spara filen: {ex.Message}", "Fel", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void ViewTranscriptionResult()
+    {
+        string text = FileTranscriptionResultText.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            WpfMessageBox.Show("Ingen transkribering att visa.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var resultWindow = new TranscriptionResultWindow(
+            text,
+            _selectedAudioFilePath ?? "",
+            _lastProcessingTime,
+            _lastAudioDuration)
+        {
+            Owner = this
+        };
+        resultWindow.ShowDialog();
+    }
+
+    private void OpenBatchQueue()
+    {
+        if (_fileTranscriptionService == null)
+        {
+            WpfMessageBox.Show("Transkriberings-tjänsten är inte initierad.", "Fel", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // Pass current settings to batch queue
+        float threshold = (float)DiarizationThresholdSlider.Value;
+        double cleanup = ReadDoubleOrFallback(DiarizationCleanupTextBox, 5.0, "Städning");
+        bool pitchProtection = DiarizationPitchProtectionCheckBox.IsChecked == true;
+        bool detectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
+        double physicalMeetingAdjustment = _config.PhysicalMeetingThresholdAdjustment;
+
+        var batchWindow = new BatchQueueWindow(_fileTranscriptionService, threshold, cleanup, pitchProtection, detectMeetingType, physicalMeetingAdjustment)
+        {
+            Owner = this
+        };
+        batchWindow.ShowDialog();
+    }
+
+    #endregion
 }
-
-
-
-
-
