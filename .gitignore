@@ -399,3 +399,15 @@ benchmark_result.txt
 third_party/whisper-bin-*.zip
 scripts/bin/
 scripts/obj/
+
+# TapScribe Scripts Cleanup (Ignore everything except package.ps1)
+scripts/*
+!scripts/package.ps1
+!scripts/third_party/
+
+# Internal Tools
+innosetup.exe
+*.py
+!scripts/*.py
+WsprPc/*.ps1
+
