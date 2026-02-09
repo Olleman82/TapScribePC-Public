@@ -17,7 +17,6 @@ if ([string]::IsNullOrEmpty($PublishDir)) {
 
 if ([string]::IsNullOrWhiteSpace($DotNet)) {
     $dotNetCandidates = @(
-        "D:\\dotnet\\dotnet.exe",
         "dotnet"
     )
 

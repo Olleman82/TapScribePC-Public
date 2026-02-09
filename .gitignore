@@ -1,3 +1,4 @@
+# TapScribe repository hygiene rules
 # Build output
 [Bb]in/
 [Oo]bj/
