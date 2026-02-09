@@ -394,6 +394,14 @@ private static bool IsUsablePath(string path)
         DiarizationMinDurationOffTextBox.Text = _config.DiarizationMinDurationOff.ToString("0.00", CultureInfo.CurrentCulture);
         DiarizationPitchProtectionCheckBox.IsChecked = _config.DiarizationPitchProtection;
 
+    // Meeting type detection
+    DetectMeetingTypeCheckBox.IsChecked = _config.DetectMeetingType;
+    PhysicalMeetingAdjustmentTextBox.Text = _config.PhysicalMeetingThresholdAdjustment.ToString("0.00", CultureInfo.CurrentCulture);
+    MeetingTypeAdjustmentPanel.Visibility = _config.DetectMeetingType ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+    DetectMeetingTypeCheckBox.Checked += (_, _) => { MeetingTypeAdjustmentPanel.Visibility = System.Windows.Visibility.Visible; AutoSaveConfig(); };
+    DetectMeetingTypeCheckBox.Unchecked += (_, _) => { MeetingTypeAdjustmentPanel.Visibility = System.Windows.Visibility.Collapsed; AutoSaveConfig(); };
+    PhysicalMeetingAdjustmentTextBox.LostFocus += (_, _) => AutoSaveConfig();
+
         RegisterHotkeys();
         UpdateHotkeyLabel();
         UpdateDefaultPromptLabel();
@@ -759,6 +767,10 @@ private static bool IsUsablePath(string path)
         _config.DiarizationMinDurationOn = ReadDoubleOrFallback(DiarizationMinDurationOnTextBox, _config.DiarizationMinDurationOn, "Kortaste tal");
         _config.DiarizationMinDurationOff = ReadDoubleOrFallback(DiarizationMinDurationOffTextBox, _config.DiarizationMinDurationOff, "Kortaste paus");
         _config.DiarizationPitchProtection = DiarizationPitchProtectionCheckBox.IsChecked == true;
+
+        // Meeting type detection
+        _config.DetectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
+        _config.PhysicalMeetingThresholdAdjustment = ReadDoubleOrFallback(PhysicalMeetingAdjustmentTextBox, _config.PhysicalMeetingThresholdAdjustment, "Fysiskt möte-justering");
     }
 
     private void SaveSettings()
@@ -2464,6 +2476,8 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
             _fileTranscriptionService.MinDurationOn = (float)_config.DiarizationMinDurationOn;
             _fileTranscriptionService.MinDurationOff = (float)_config.DiarizationMinDurationOff;
             _fileTranscriptionService.EnablePitchProtection = _config.DiarizationPitchProtection;
+            _fileTranscriptionService.DetectMeetingType = _config.DetectMeetingType;
+            _fileTranscriptionService.PhysicalMeetingThresholdAdjustment = _config.PhysicalMeetingThresholdAdjustment;
 
             int numThreads = CalculateCpuThreads();
             string result = await _fileTranscriptionService.TranscribeAsync(
@@ -2615,8 +2629,10 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         float threshold = (float)DiarizationThresholdSlider.Value;
         double cleanup = ReadDoubleOrFallback(DiarizationCleanupTextBox, 5.0, "Städning");
         bool pitchProtection = DiarizationPitchProtectionCheckBox.IsChecked == true;
+        bool detectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
+        double physicalMeetingAdjustment = _config.PhysicalMeetingThresholdAdjustment;
 
-        var batchWindow = new BatchQueueWindow(_fileTranscriptionService, threshold, cleanup, pitchProtection)
+        var batchWindow = new BatchQueueWindow(_fileTranscriptionService, threshold, cleanup, pitchProtection, detectMeetingType, physicalMeetingAdjustment)
         {
             Owner = this
         };

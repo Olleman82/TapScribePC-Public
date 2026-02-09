@@ -403,7 +403,19 @@
                       <ComboBoxItem Content="9" />
                       <ComboBoxItem Content="10" />
                     </ComboBox>
+                    <CheckBox x:Name="DetectMeetingTypeCheckBox" Content="Detektera mötestyp" 
+                              VerticalAlignment="Center" Margin="20,0,0,0"
+                              ToolTip="Analyserar ljudet för att avgöra fysiskt/digitalt möte. Fysiska möten får justerad talaridentifiering." />
+                    
+                    <!-- Inline adjustment panel (visible when checkbox is checked) -->
+                    <StackPanel x:Name="MeetingTypeAdjustmentPanel" Orientation="Horizontal" Visibility="Collapsed" Margin="15,0,0,0">
+                        <TextBlock Text="Värde:" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBox x:Name="PhysicalMeetingAdjustmentTextBox" Width="45" Margin="6,0,0,0" FontSize="13"
+                                 ToolTip="+0.15 är standardvärde för fysiska möten. Adderas till känsligheten." />
+                    </StackPanel>
                   </StackPanel>
+                  
+
                   
                   <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                     <Button x:Name="StartFileTranscriptionButton" Content="Starta transkribering" Style="{StaticResource PrimaryButton}" IsEnabled="False" Padding="14,8" />

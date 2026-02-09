@@ -386,3 +386,16 @@ FodyWeavers.xsd
 skills/
 
 .agent_docs/
+
+# TapScribe Specific Cleanup
+*.zip
+build_error.log
+diarization_*.log
+old_config.txt
+old_service.txt
+temp_transcript.txt
+Result_*.txt
+benchmark_result.txt
+third_party/whisper-bin-*.zip
+scripts/bin/
+scripts/obj/

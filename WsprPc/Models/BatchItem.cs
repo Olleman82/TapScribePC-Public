@@ -17,6 +17,20 @@ public class BatchItem : INotifyPropertyChanged
     private string _result = "";
     private TimeSpan _processingTime;
     private string? _errorMessage;
+    private double _diarizationThreshold = 1.15;
+    private bool _enablePitchProtection = true;
+
+    public double DiarizationThreshold
+    {
+        get => _diarizationThreshold;
+        set { _diarizationThreshold = value; OnPropertyChanged(); }
+    }
+
+    public bool EnablePitchProtection
+    {
+        get => _enablePitchProtection;
+        set { _enablePitchProtection = value; OnPropertyChanged(); }
+    }
 
     public string FilePath
     {

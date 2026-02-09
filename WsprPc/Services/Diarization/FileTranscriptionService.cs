@@ -68,6 +68,19 @@ public sealed class FileTranscriptionService : IDisposable
     /// </summary>
     public int ForcedNumClusters { get; set; } = -1;
 
+    /// <summary>
+    /// Enable automatic meeting type detection to adjust clustering threshold.
+    /// </summary>
+    public bool DetectMeetingType { get; set; }
+
+    /// <summary>
+    /// Amount to add to ClusteringThreshold when a physical meeting is detected.
+    /// Default: 0.15
+    /// </summary>
+    public double PhysicalMeetingThresholdAdjustment { get; set; } = 0.15;
+
+    private readonly MeetingTypeAnalyzer _meetingTypeAnalyzer = new();
+
     public FileTranscriptionService(WhisperNetEngine whisper, string? baseDir = null)
     {
         _whisper = whisper ?? throw new ArgumentNullException(nameof(whisper));
@@ -117,8 +130,38 @@ public sealed class FileTranscriptionService : IDisposable
         {
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
 
+            // Phase 0: Meeting type detection (if enabled) - runs BEFORE audio normalization
+            float thresholdAdjustment = 0;
+            if (DetectMeetingType)
+            {
+                progress?.Report((0, "Analyserar mötestyp..."));
+                var meetingResult = await _meetingTypeAnalyzer.AnalyzeAsync(filePath);
+                
+                if (meetingResult.IsPhysicalMeeting && meetingResult.IsHighConfidence)
+                {
+                    thresholdAdjustment = (float)PhysicalMeetingThresholdAdjustment;
+                    var adjustedThreshold = ClusteringThreshold + thresholdAdjustment;
+                    Console.WriteLine($"[MEETING-TYPE] Adjusting threshold: {ClusteringThreshold:F2} + {thresholdAdjustment:F2} = {adjustedThreshold:F2}");
+                    
+                    progress?.Report((3, $"Fysiskt möte: Justerar känslighet +{thresholdAdjustment:F2}"));
+                    await Task.Delay(2000, ct);
+                }
+                else if (meetingResult.IsPhysicalMeeting && !meetingResult.IsHighConfidence)
+                {
+                    Console.WriteLine($"[MEETING-TYPE] Physical meeting detected but low confidence - no adjustment");
+                    progress?.Report((3, "Fysiskt möte (låg säkerhet): Ingen justering"));
+                    await Task.Delay(1500, ct);
+                }
+                else
+                {
+                    Console.WriteLine($"[MEETING-TYPE] Digital meeting detected - no adjustment");
+                    progress?.Report((3, "Digitalt möte detekterat"));
+                    await Task.Delay(1500, ct);
+                }
+            }
+
             // Phase 1: Load audio (0-10%)
-            progress?.Report((0, "Laddar och tvättar ljud..."));
+            progress?.Report((5, "Laddar och tvättar ljud..."));
             
             // Use FFmpeg for high-quality preprocessing (balanced profile)
             var audioFloat = await AudioFileLoader.LoadNormalizedAsFloatAsync(filePath, _dependencyManager.FfmpegPath, ct);
@@ -136,12 +179,13 @@ public sealed class FileTranscriptionService : IDisposable
             
             progress?.Report((12, "Initierar talarmodell..."));
             _diarizer.ForcedNumClusters = this.ForcedNumClusters;
-            _diarizer.ClusteringThreshold = this.ClusteringThreshold;
+            _diarizer.ClusteringThreshold = this.ClusteringThreshold + thresholdAdjustment;
             _diarizer.MinDurationOn = this.MinDurationOn;
             _diarizer.MinDurationOff = this.MinDurationOff;
             _diarizer.Initialize(numThreads);
 
             Debug.WriteLine($"Diarizer Params: Threshold={_diarizer.ClusteringThreshold}, NumClusters={_diarizer.ForcedNumClusters}, MinOn={_diarizer.MinDurationOn}, MinOff={_diarizer.MinDurationOff}");
+            Console.WriteLine($"[DIARIZATION] Using ClusteringThreshold={_diarizer.ClusteringThreshold:F2}");
 
             // Phase 3: Run diarization (10-40%)
             progress?.Report((15, "Identifierar talare..."));

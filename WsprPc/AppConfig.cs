@@ -9,7 +9,7 @@ public sealed class AppConfig
 {
     private const string DefaultUpdateRepoOwner = "Olleman82";
     private const string DefaultUpdateRepoName = "TapScribePC-Public";
-    public const int CurrentSettingsVersion = 8;
+    public const int CurrentSettingsVersion = 9;
 
     public int SettingsVersion { get; set; } = CurrentSettingsVersion;
     public string? WhisperCliPath { get; set; }
@@ -45,12 +45,16 @@ public sealed class AppConfig
     // Diarization settings
     public string? SherpaModelsPath { get; set; }
     public bool SherpaModelsDownloaded { get; set; }
-    public double DiarizationThreshold { get; set; } = 0.75;
+    public double DiarizationThreshold { get; set; } = 1.15;
     public double DiarizationGhostCleanupSeconds { get; set; } = 15.0;
     public bool DiarizationPitchProtection { get; set; } = true;
     public double DiarizationMinDurationOn { get; set; } = 0.15;
     public double DiarizationMinDurationOff { get; set; } = 0.10;
     public string? FfmpegPath { get; set; }
+    
+    // Meeting type detection
+    public bool DetectMeetingType { get; set; } = true;
+    public double PhysicalMeetingThresholdAdjustment { get; set; } = 0.10;
 
     public static AppConfig Load(string path)
     {
@@ -156,6 +160,15 @@ public sealed class AppConfig
             DiarizationMinDurationOn = 0.15;
             DiarizationMinDurationOff = 0.10;
             SettingsVersion = 8;
+            changed = true;
+        }
+
+        if (SettingsVersion < 9)
+        {
+            // Meeting type detection
+            DetectMeetingType = true;
+            PhysicalMeetingThresholdAdjustment = 0.10;
+            SettingsVersion = 9;
             changed = true;
         }
 

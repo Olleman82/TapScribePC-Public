@@ -27,16 +27,21 @@ public partial class BatchQueueWindow : Window
     private readonly float _clusteringThreshold;
     private readonly double _minTotalDuration;
     private readonly bool _enablePitchProtection;
+    private readonly bool _detectMeetingType;
+    private readonly double _physicalMeetingAdjustment;
 
-    public BatchQueueWindow(FileTranscriptionService transcriptionService, float clusteringThreshold, double minTotalDuration, bool enablePitchProtection)
+    public BatchQueueWindow(FileTranscriptionService transcriptionService, float clusteringThreshold, double minTotalDuration, bool enablePitchProtection, bool detectMeetingType, double physicalMeetingAdjustment)
     {
         InitializeComponent();
         _transcriptionService = transcriptionService;
         _clusteringThreshold = clusteringThreshold;
         _minTotalDuration = minTotalDuration;
         _enablePitchProtection = enablePitchProtection;
+        _detectMeetingType = detectMeetingType;
+        _physicalMeetingAdjustment = physicalMeetingAdjustment;
         
         FileGrid.ItemsSource = _items;
+        DetectMeetingTypeCheckBox.IsChecked = detectMeetingType;
         UpdateFileCount();
 
         Loaded += (_, _) => ApplyTitleBarTheme(true);
@@ -73,7 +78,12 @@ public partial class BatchQueueWindow : Window
                 // Avoid duplicates
                 if (!_items.Any(i => i.FilePath.Equals(file, StringComparison.OrdinalIgnoreCase)))
                 {
-                    _items.Add(new BatchItem { FilePath = file });
+                    _items.Add(new BatchItem 
+                    { 
+                        FilePath = file, 
+                        DiarizationThreshold = _clusteringThreshold,
+                        EnablePitchProtection = _enablePitchProtection // Inherit global setting initially
+                    });
                 }
             }
             UpdateFileCount();
@@ -82,10 +92,65 @@ public partial class BatchQueueWindow : Window
 
     private void RemoveItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.Button btn && btn.DataContext is BatchItem item)
+        // Handle both simple button click and context menu click
+        BatchItem? item = null;
+        
+        if (sender is System.Windows.Controls.MenuItem menuItem && menuItem.DataContext is BatchItem mItem)
+            item = mItem;
+        else if (sender is System.Windows.Controls.Button btn && btn.DataContext is BatchItem bItem)
+            item = bItem;
+
+        if (item != null)
         {
             _items.Remove(item);
             UpdateFileCount();
+        }
+    }
+
+    private void ItemMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button btn && btn.ContextMenu != null)
+        {
+            btn.ContextMenu.DataContext = btn.DataContext; // Ensure context is passed
+            btn.ContextMenu.IsOpen = true;
+        }
+    }
+
+    private void DuplicateItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.MenuItem menuItem && menuItem.DataContext is BatchItem item)
+        {
+            var index = _items.IndexOf(item);
+            if (index == -1) return;
+
+            var newItem = new BatchItem
+            {
+                FilePath = item.FilePath,
+                DiarizationThreshold = item.DiarizationThreshold,
+                EnablePitchProtection = item.EnablePitchProtection,
+                SpeakerCount = item.SpeakerCount
+            };
+
+            _items.Insert(index + 1, newItem);
+            UpdateFileCount();
+        }
+    }
+
+    private void CreateExperiment_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.MenuItem menuItem && menuItem.DataContext is BatchItem item)
+        {
+            var window = new BatchExperimentsWindow(item);
+            if (window.ShowDialog() == true && window.GeneratedItems.Count > 0)
+            {
+                var index = _items.IndexOf(item);
+                // Insert items in reverse order so they appear in correct sequence after index
+                for (int i = window.GeneratedItems.Count - 1; i >= 0; i--)
+                {
+                    _items.Insert(index + 1, window.GeneratedItems[i]);
+                }
+                UpdateFileCount();
+            }
         }
     }
 
@@ -196,9 +261,13 @@ public partial class BatchQueueWindow : Window
     private async Task ProcessBatchAsync(CancellationToken ct)
     {
         // Apply global settings to service
-        _transcriptionService.ClusteringThreshold = _clusteringThreshold;
+        // _transcriptionService.ClusteringThreshold is now set per item below
         _transcriptionService.MinTotalDurationSeconds = _minTotalDuration;
         _transcriptionService.EnablePitchProtection = _enablePitchProtection;
+        
+        // Meeting type detection - uses the checkbox state (can differ from initial setting)
+        _transcriptionService.DetectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
+        _transcriptionService.PhysicalMeetingThresholdAdjustment = _physicalMeetingAdjustment;
 
         int numThreads = Math.Max(1, Environment.ProcessorCount / 2);
 
@@ -223,7 +292,9 @@ public partial class BatchQueueWindow : Window
                     });
                 });
 
-                // Set per-file speaker count
+                // Set per-file settings
+                _transcriptionService.ClusteringThreshold = (float)item.DiarizationThreshold;
+                _transcriptionService.EnablePitchProtection = item.EnablePitchProtection;
                 int? expectedSpeakers = item.SpeakerCount > 0 ? item.SpeakerCount : null;
 
                 string result = await _transcriptionService.TranscribeAsync(
@@ -242,9 +313,16 @@ public partial class BatchQueueWindow : Window
                 // Auto-save if enabled
                 if (AutoSaveCheckBox.IsChecked == true)
                 {
+                    // Build variant suffix: _t{threshold}_pitch_{on/off}[_{speakerCount}sp]
+                    string variantSuffix = $"_t{item.DiarizationThreshold:F2}_pitch_{(item.EnablePitchProtection ? "on" : "off")}";
+                    if (item.SpeakerCount > 0)
+                    {
+                        variantSuffix += $"_{item.SpeakerCount}sp";
+                    }
+                    
                     string outputPath = Path.Combine(
                         Path.GetDirectoryName(item.FilePath) ?? "",
-                        Path.GetFileNameWithoutExtension(item.FilePath) + "_transkribering.txt");
+                        Path.GetFileNameWithoutExtension(item.FilePath) + variantSuffix + ".txt");
                     
                     try
                     {

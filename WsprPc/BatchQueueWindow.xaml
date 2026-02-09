@@ -72,6 +72,10 @@
                 SelectionMode="Single"
                 HorizontalScrollBarVisibility="Disabled"
                 RowHeight="40">
+        <DataGrid.Resources>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3168D4"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#3168D4"/>
+        </DataGrid.Resources>
         <DataGrid.Columns>
           <!-- Filename -->
           <DataGridTextColumn Header="Fil" Binding="{Binding FileName}" Width="*" IsReadOnly="True">
@@ -105,6 +109,30 @@
               </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
           </DataGridTemplateColumn>
+
+          <!-- Threshold -->
+          <DataGridTemplateColumn Header="Känslighet" Width="80">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Text="{Binding DiarizationThreshold, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" 
+                         IsEnabled="{Binding IsRemovable}"
+                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                         Margin="6,4" ToolTip="Lägre värde (0.1) = fler talare. Högre värde (2.0) = färre talare." />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Pitch Protection -->
+          <DataGridTemplateColumn Header="🛡️" Width="40">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <CheckBox IsChecked="{Binding EnablePitchProtection, UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding IsRemovable}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          ToolTip="Könsskydd (Pitch Protection). Förhindrar att manliga och kvinnliga röster slås ihop." />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
           
           <!-- Status -->
           <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120" IsReadOnly="True">
@@ -118,43 +146,38 @@
           </DataGridTextColumn>
           
           <!-- Actions -->
-          <DataGridTemplateColumn Header="Åtgärd" Width="80">
+          <DataGridTemplateColumn Header="Åtgärd" Width="90">
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                  <Button Content="✕" Width="28" Height="28"
-                          Background="Transparent" BorderThickness="0"
-                          Foreground="{DynamicResource TextSecondary}"
-                          Visibility="{Binding IsRemovable, Converter={StaticResource BoolToVisibility}}"
-                          Click="RemoveItem_Click"
-                          Cursor="Hand"
-                          ToolTip="Ta bort från kö">
-                    <Button.Style>
-                      <Style TargetType="Button">
-                        <Style.Triggers>
-                          <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="Red" />
-                          </Trigger>
-                        </Style.Triggers>
-                      </Style>
-                    </Button.Style>
-                  </Button>
+                  <!-- View Result (Only visible when complete) -->
                   <Button Content="👁" Width="28" Height="28"
                           Background="Transparent" BorderThickness="0"
                           Foreground="{DynamicResource AccentColor}"
                           Visibility="{Binding CanViewResult, Converter={StaticResource BoolToVisibility}}"
                           Click="ViewResult_Click"
                           Cursor="Hand"
-                          ToolTip="Visa transkribering">
-                    <Button.Style>
-                      <Style TargetType="Button">
-                        <Style.Triggers>
-                          <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Opacity" Value="0.7" />
-                          </Trigger>
-                        </Style.Triggers>
-                      </Style>
-                    </Button.Style>
+                          ToolTip="Visa transkribering"
+                          Margin="0,0,4,0">
+                  </Button>
+                  
+                  <!-- Menu Button (Always visible) -->
+                  <Button Content="⋮" Width="28" Height="28"
+                          Background="Transparent" BorderThickness="0"
+                          Foreground="{DynamicResource TextPrimary}"
+                          FontSize="16" FontWeight="Bold"
+                          Click="ItemMenu_Click"
+                          Cursor="Hand"
+                          Visibility="{Binding IsRemovable, Converter={StaticResource BoolToVisibility}}"
+                          ToolTip="Fler alternativ">
+                     <Button.ContextMenu>
+                       <ContextMenu>
+                         <MenuItem Header="Duplicera" Click="DuplicateItem_Click" />
+                         <MenuItem Header="Skapa experiment..." Click="CreateExperiment_Click" />
+                         <Separator />
+                         <MenuItem Header="Ta bort" Click="RemoveItem_Click" Foreground="Red" />
+                       </ContextMenu>
+                     </Button.ContextMenu>
                   </Button>
                 </StackPanel>
               </DataTemplate>
@@ -174,6 +197,8 @@
     <StackPanel Grid.Row="3" Margin="0,20,0,0">
       <CheckBox x:Name="AutoSaveCheckBox" Content="Spara automatiskt bredvid källfilen (.txt)" IsChecked="True" FontSize="13" />
       <CheckBox x:Name="CloseOnCompleteCheckBox" Content="Stäng appen när kört klart" Margin="0,10,0,0" FontSize="13" />
+      <CheckBox x:Name="DetectMeetingTypeCheckBox" Content="Detektera mötestyp (justerar känslighet för fysiska möten)" Margin="0,10,0,0" FontSize="13" 
+                ToolTip="Analyserar ljudet för att avgöra om det är ett fysiskt eller digitalt möte. Fysiska möten får automatiskt justerad talaridentifiering." />
     </StackPanel>
     
     <!-- Footer -->

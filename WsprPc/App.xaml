@@ -223,6 +223,63 @@
       <Setter Property="Padding" Value="8,4" />
     </Style>
     
+    <!-- ContextMenu global style (for popups in separate visual tree) -->
+    <Style TargetType="ContextMenu">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="2" />
+      <Setter Property="HasDropShadow" Value="True" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ContextMenu">
+            <Border Background="{DynamicResource CardBg}"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="2">
+              <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    
+    <Style TargetType="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="MenuItem">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="3">
+              <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsHighlighted" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BorderColor}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    
+    <Style TargetType="Separator">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Margin" Value="4,4" />
+      <Setter Property="Background" Value="{DynamicResource BorderColor}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Separator">
+            <Border Height="1" Background="{DynamicResource BorderColor}" />
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    
     <!-- DatePicker dark theme aware -->
     <Style TargetType="DatePicker">
       <Setter Property="Background" Value="{DynamicResource ControlBg}" />
