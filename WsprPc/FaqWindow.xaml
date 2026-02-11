@@ -169,6 +169,25 @@
         <!-- FAQ 6: API-nycklar -->
         <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,12,0,0">
           <StackPanel>
+            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🗣️ Ska jag välja Auto eller manuellt antal talare i möten?" />
+            <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
+              <Run FontWeight="Medium">Börja med Auto:</Run>
+              <Run>Det fungerar normalt bra för de flesta mötesinspelningar.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Välj manuellt antal när:</Run>
+              <Run>du vet exakt hur många som pratar och vill låsa resultatet till det antalet.</Run>
+              <LineBreak />
+              <LineBreak />
+              <Run FontWeight="Medium">Om resultatet blir ojämnt:</Run>
+              <Run>testa samma fil med manuellt antal och jämför utfallet.</Run>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+
+        <!-- FAQ 7: API-nycklar -->
+        <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,12,0,0">
+          <StackPanel>
             <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Text="🔑 Hur skaffar jag API-nycklar?" />
             <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}">
               <Run>TapScribe kan använda externa AI-tjänster för textbearbetning. Du behöver en egen API-nyckel från den leverantör du vill använda.</Run>

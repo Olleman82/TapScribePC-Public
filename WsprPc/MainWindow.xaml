@@ -411,7 +411,7 @@
                     <StackPanel x:Name="MeetingTypeAdjustmentPanel" Orientation="Horizontal" Visibility="Collapsed" Margin="15,0,0,0">
                         <TextBlock Text="Värde:" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextSecondary}" />
                         <TextBox x:Name="PhysicalMeetingAdjustmentTextBox" Width="45" Margin="6,0,0,0" FontSize="13"
-                                 ToolTip="+0.15 är standardvärde för fysiska möten. Adderas till känsligheten." />
+                                 ToolTip="+0.10 är standardvärde för fysiska möten. Adderas till känsligheten." />
                     </StackPanel>
                   </StackPanel>
                   
@@ -431,7 +431,7 @@
                      <Button Style="{StaticResource InfoBtn}" Content="?">
                         <Button.ToolTip>
                             <ToolTip>
-                                <TextBlock TextWrapping="Wrap" MaxWidth="250" Text="Tips: Ange exakt antal talare i mötet för bäst resultat. &#x0a;&#x0a;Autoläget gissar antalet talare men kan ibland missa om någon säger väldigt lite. &#x0a;&#x0a;Diarisering är resurskrävande och tar längre tid än vanlig transkribering." />
+                                <TextBlock TextWrapping="Wrap" MaxWidth="250" Text="Tips: Börja med Auto - det fungerar normalt bra. &#x0a;&#x0a;Ange manuellt antal talare när du vet exakt antal och vill låsa utfallet. &#x0a;&#x0a;Diarisering är resurskrävande och tar längre tid än vanlig transkribering." />
                             </ToolTip>
                         </Button.ToolTip>
                      </Button>
