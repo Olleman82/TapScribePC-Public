@@ -90,6 +90,10 @@ innosetup.exe
 
 # Text/docs safety (avoid leaking local notes/transcripts)
 docs/
+!docs/
+docs/*
+!docs/user-manual/
+!docs/user-manual/**
 *.txt
 !README.txt
 !TapScribe_README.txt
