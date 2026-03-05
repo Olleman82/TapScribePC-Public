@@ -17,6 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LLamaSharp" Version="0.26.0" />
+    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.26.0" ExcludeAssets="runtime" GeneratePathProperty="true" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
     <PackageReference Include="Whisper.net" Version="1.5.0" />
@@ -34,6 +36,11 @@
     <None Include="BuildId.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\third_party\whisper.cpp_bin_v1.5.1_x64\whisper-cli.exe" Link="whisper-cli.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\third_party\whisper.cpp_bin_v1.5.1_x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\avx2\llama.dll" Link="llama.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\avx2\ggml.dll" Link="ggml.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\avx2\ggml-base.dll" Link="ggml-base.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\avx2\ggml-cpu.dll" Link="ggml-cpu.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\avx2\mtmd.dll" Link="mtmd.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\third_party\whisper.cpp_bin_v1.5.1_Win32\*.*" Link="whisper_win32\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\third_party\silero_vad.onnx" Link="silero_vad.onnx" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="Assets\splash.png" Link="splash.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />

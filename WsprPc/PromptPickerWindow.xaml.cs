@@ -9,6 +9,7 @@ namespace WsprPc;
 public partial class PromptPickerWindow : Window
 {
     public PromptDefinition? SelectedPrompt { get; private set; }
+    public bool UseClipboardOverride => UseClipboardOverrideCheckBox.IsChecked == true;
 
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(System.IntPtr hwnd, int attr, ref int attrValue, int attrSize);

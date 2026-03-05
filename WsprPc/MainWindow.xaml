@@ -350,13 +350,14 @@
               </StackPanel>
             </Border>
 
-            <Expander Header="Manuell modell-länk" FontSize="13" IsExpanded="False">
+            <Expander Header="Manuell Whisper-modell-länk (transkribering)" FontSize="13" IsExpanded="False">
               <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,6,0,0">
                 <StackPanel>
                   <TextBlock Text="URL:" FontSize="12" Margin="0,0,0,3" />
                   <TextBox x:Name="ModelUrlTextBox" FontSize="13" Margin="0,0,0,6" />
                   <TextBlock Text="Filnamn:" FontSize="12" Margin="0,0,0,3" />
                   <TextBox x:Name="ModelFileNameTextBox" FontSize="13" />
+                  <TextBlock Text="Gäller endast Whisper-transkriberingsmodeller, inte Local Qwen-prompter." FontSize="11" Margin="0,8,0,0" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
             </Expander>

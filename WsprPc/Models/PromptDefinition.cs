@@ -3,7 +3,8 @@ namespace WsprPc.Models;
 public enum AiProvider
 {
     Gemini,
-    OpenAI
+    OpenAI,
+    LocalQwen
 }
 
 public sealed class PromptDefinition
@@ -20,6 +21,13 @@ public sealed class PromptDefinition
     public bool GeminiUseGrounding { get; set; }
     public string OpenAiModel { get; set; } = "gpt-5-mini";
     public string OpenAiReasoningEffort { get; set; } = "minimal";
+    public string? LocalAiModelId { get; set; }
+    public string? LocalAiModelPath { get; set; }
+    public int? LocalAiMaxTokens { get; set; }
+    public double? LocalAiTemperature { get; set; }
+    public int? LocalAiContextSize { get; set; } // 0 = auto
+    public int? LocalAiTimeoutSeconds { get; set; }
+    public int? LocalAiGpuLayers { get; set; } // -1 = auto
     
     // Webhook settings
     public bool SendToWebhook { get; set; }

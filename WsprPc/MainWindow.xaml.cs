@@ -18,6 +18,7 @@ using WpfMessageBox = System.Windows.MessageBox;
 using WsprPc.Models;
 using WsprPc.Services;
 using WsprPc.Services.Ai;
+using WsprPc.Services.Ai.Local;
 using WsprPc.Services.Vad;
 using WsprPc.Services.Diarization;
 using WsprPc.Stores;
@@ -33,6 +34,7 @@ public partial class MainWindow : Window
     private readonly HttpClient _httpClient = new();
     private readonly GeminiClient _geminiClient = new();
     private readonly OpenAiClient _openAiClient = new();
+    private readonly LocalLlamaServerClient _localQwenClient = new();
     private CancellationTokenSource? _downloadCts;
     private AppConfig _config = new();
     private readonly string _configPath;
@@ -49,6 +51,7 @@ public partial class MainWindow : Window
     private string? _envPath;
     private List<ModelPreset> _presets = new();
     private ModelPreset? _downloadPreset;
+    private List<LocalAiModelPreset> _localAiPresets = new();
     private TrayIconService? _trayIcon;
     private string? _updateDownloadUrl;
     private readonly System.Text.StringBuilder _currentSessionText = new();     
@@ -71,6 +74,23 @@ public partial class MainWindow : Window
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MemoryStatusEx
+    {
+        public uint Length;
+        public uint MemoryLoad;
+        public ulong TotalPhys;
+        public ulong AvailPhys;
+        public ulong TotalPageFile;
+        public ulong AvailPageFile;
+        public ulong TotalVirtual;
+        public ulong AvailVirtual;
+        public ulong AvailExtendedVirtual;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx lpBuffer);
 
     public MainWindow()
     {
@@ -156,6 +176,7 @@ public partial class MainWindow : Window
         InitializeDownloadUi();
         InitializeModelSelector();
         AutoSelectModelIfUnset();
+        _localAiPresets = LocalAiCatalog.CreateDefaultPresets().ToList();
         InitializePromptSystem();
         InitializeSettingsUi();
         InitializeAutoTuneUi();
@@ -215,6 +236,7 @@ public partial class MainWindow : Window
             _downloadCts?.Cancel();
             _autoTuneCts?.Cancel();
             _httpClient.Dispose();
+            _localQwenClient.Dispose();
             _trayIcon?.Dispose();
             _logger?.Info("App closed");
             System.Windows.Application.Current.Shutdown();
@@ -265,9 +287,10 @@ public partial class MainWindow : Window
     }
 
     private void NormalizeConfigPaths(string dataDir)
-{
+    {
     string fallbackLogDir = Path.Combine(dataDir, "logs");
     string fallbackModelDir = Path.Combine(dataDir, "models");
+    string fallbackLocalAiModelDir = GetDefaultLocalAiModelDir();
     bool updated = false;
 
     if (string.IsNullOrWhiteSpace(_config.LogDir) || !IsUsablePath(_config.LogDir))
@@ -307,10 +330,36 @@ public partial class MainWindow : Window
         }
     }
 
+    if (string.IsNullOrWhiteSpace(_config.LocalAiModelDir) || !IsUsablePath(_config.LocalAiModelDir))
+    {
+        _config.LocalAiModelDir = fallbackLocalAiModelDir;
+        updated = true;
+    }
+
+    if (!string.IsNullOrWhiteSpace(_config.LocalAiModelDir))
+    {
+        try
+        {
+            Directory.CreateDirectory(_config.LocalAiModelDir);
+        }
+        catch
+        {
+            _config.LocalAiModelDir = fallbackLocalAiModelDir;
+            updated = true;
+        }
+    }
+
     if (!string.IsNullOrWhiteSpace(_config.ModelPath) && !File.Exists(_config.ModelPath))
     {
         _config.ModelPath = null;
         _config.SelectedModel = null;
+        updated = true;
+    }
+
+    if (!string.IsNullOrWhiteSpace(_config.LocalAiModelPath) && !File.Exists(_config.LocalAiModelPath))
+    {
+        _config.LocalAiModelPath = null;
+        _config.SelectedLocalAiModelId = null;
         updated = true;
     }
 
@@ -339,7 +388,7 @@ public partial class MainWindow : Window
             // Ignore save failures.
         }
     }
-}
+    }
 
 private static bool IsUsablePath(string path)
     {
@@ -496,7 +545,7 @@ private static bool IsUsablePath(string path)
 
     private void AddPrompt()
     {
-        var dialog = new PromptEditorWindow();
+        var dialog = new PromptEditorWindow(GetOrCreateLocalAiModelDir(), _localAiPresets);
         dialog.Owner = this;
         if (dialog.ShowDialog() == true)
         {
@@ -511,7 +560,7 @@ private static bool IsUsablePath(string path)
         if (PromptListBox.SelectedItem is not PromptDefinition prompt)
             return;
 
-        var dialog = new PromptEditorWindow(prompt);
+        var dialog = new PromptEditorWindow(GetOrCreateLocalAiModelDir(), _localAiPresets, prompt);
         dialog.Owner = this;
         if (dialog.ShowDialog() == true)
         {
@@ -771,6 +820,7 @@ private static bool IsUsablePath(string path)
         // Meeting type detection
         _config.DetectMeetingType = DetectMeetingTypeCheckBox.IsChecked == true;
         _config.PhysicalMeetingThresholdAdjustment = ReadDoubleOrFallback(PhysicalMeetingAdjustmentTextBox, _config.PhysicalMeetingThresholdAdjustment, "Fysiskt möte-justering");
+
     }
 
     private void SaveSettings()
@@ -1681,6 +1731,126 @@ private static bool IsUsablePath(string path)
         }
     }
 
+    private string? ResolveLocalAiModelPath(LocalAiModelPreset preset)
+    {
+        string modelDir = GetOrCreateLocalAiModelDir();
+
+        if (!Directory.Exists(modelDir))
+            return null;
+
+        string folder = Path.Combine(modelDir, preset.Subfolder);
+        string candidate = Path.Combine(folder, preset.FileName);
+        return File.Exists(candidate) ? candidate : null;
+    }
+
+    private string GetOrCreateLocalAiModelDir()
+    {
+        string modelDir = string.IsNullOrWhiteSpace(_config.LocalAiModelDir)
+            ? GetDefaultLocalAiModelDir()
+            : _config.LocalAiModelDir!;
+
+        Directory.CreateDirectory(modelDir);
+        if (!string.Equals(_config.LocalAiModelDir, modelDir, StringComparison.OrdinalIgnoreCase))
+        {
+            _config.LocalAiModelDir = modelDir;
+            _config.Save(_configPath);
+        }
+
+        return modelDir;
+    }
+
+    private string? ResolvePromptLocalAiModelPath(PromptDefinition prompt)
+    {
+        if (!string.IsNullOrWhiteSpace(prompt.LocalAiModelPath) && File.Exists(prompt.LocalAiModelPath))
+            return prompt.LocalAiModelPath;
+
+        if (string.IsNullOrWhiteSpace(prompt.LocalAiModelId))
+            return null;
+
+        var preset = _localAiPresets.FirstOrDefault(p =>
+            string.Equals(p.Id, prompt.LocalAiModelId, StringComparison.OrdinalIgnoreCase));
+        if (preset == null)
+            return null;
+
+        return ResolveLocalAiModelPath(preset);
+    }
+
+    private bool EnsureLocalAiModelReadyAsync(PromptDefinition prompt)
+    {
+        string? modelPath = ResolvePromptLocalAiModelPath(prompt);
+        if (!string.IsNullOrWhiteSpace(modelPath))
+        {
+            prompt.LocalAiModelPath = modelPath;
+            return true;
+        }
+
+        var result = WpfMessageBox.Show(
+            $"Prompten \"{prompt.Title}\" saknar nedladdad lokal modell.\nVill du öppna promptinställningar nu?",
+            "Lokal modell saknas",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+            return false;
+
+        var dialog = new PromptEditorWindow(GetOrCreateLocalAiModelDir(), _localAiPresets, prompt)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            _promptStore.Save(_prompts);
+            modelPath = ResolvePromptLocalAiModelPath(prompt);
+            if (!string.IsNullOrWhiteSpace(modelPath))
+            {
+                prompt.LocalAiModelPath = modelPath;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private LocalAiModelPreset? GetRecommendedLocalAiPreset()
+    {
+        double ramGiB = GetTotalRamGiB();
+        if (ramGiB < 8)
+            return _localAiPresets.FirstOrDefault(p => p.Id.Contains("0.8b", StringComparison.OrdinalIgnoreCase));
+        if (ramGiB < 16)
+            return _localAiPresets.FirstOrDefault(p => p.Id.Contains("2b", StringComparison.OrdinalIgnoreCase));
+        if (ramGiB < 24)
+            return _localAiPresets.FirstOrDefault(p => p.Id.Contains("4b", StringComparison.OrdinalIgnoreCase));
+
+        return _localAiPresets.FirstOrDefault(p => p.Id.Contains("9b", StringComparison.OrdinalIgnoreCase))
+               ?? _localAiPresets.FirstOrDefault(p => p.Id.Contains("4b", StringComparison.OrdinalIgnoreCase))
+               ?? _localAiPresets.LastOrDefault();
+    }
+
+    private static double GetTotalRamGiB()
+    {
+        var memStatus = new MemoryStatusEx();
+        memStatus.Length = (uint)Marshal.SizeOf(memStatus);
+        if (GlobalMemoryStatusEx(ref memStatus) && memStatus.TotalPhys > 0)
+            return memStatus.TotalPhys / 1024d / 1024d / 1024d;
+
+        // Conservative fallback if Windows API unexpectedly fails.
+        return 8d;
+    }
+
+    private int GetRecommendedLocalAiContextSize(int configuredContextSize)
+    {
+        if (configuredContextSize > 0)
+            return configuredContextSize;
+
+        double ramGiB = GetTotalRamGiB();
+        if (ramGiB < 8)
+            return 1024;
+        if (ramGiB < 16)
+            return 1536;
+        return 2048;
+    }
+
     private void ShowModelInfo()
     {
         const string info = "Modellnivåer (högre = bättre kvalitet men långsammare):\n" +
@@ -1886,7 +2056,9 @@ private static bool IsUsablePath(string path)
             return;
         }
 
-        var prompt = PickPrompt();
+        var promptSelection = PickPrompt();
+        var prompt = promptSelection.Prompt;
+        bool forceClipboardForRequest = promptSelection.UseClipboardOverride;
         if (prompt == null)
         {
             SetStatus("Ingen prompt vald.");
@@ -1895,6 +2067,19 @@ private static bool IsUsablePath(string path)
             await Task.Delay(1500);
             SetStatus("Väntar");
             return;
+        }
+
+        if (prompt.Provider == AiProvider.LocalQwen)
+        {
+            bool ready = EnsureLocalAiModelReadyAsync(prompt);
+            if (!ready)
+            {
+                SetStatus("Lokal AI-modell saknas.");
+                Dispatcher.Invoke(() => LastResultText.Text = "Lokal AI-modell saknas eller nedladdning avbröts.");
+                await Task.Delay(1500);
+                SetStatus("Väntar");
+                return;
+            }
         }
 
         _logger?.Info($"AI: prompt='{prompt.Title}', provider={prompt.Provider}");
@@ -1920,7 +2105,7 @@ private static bool IsUsablePath(string path)
                 if (prompt.SendRawText)
                 {
                     resultText = transcript ?? string.Empty;
-                    if (prompt.UseClipboard && hasClipboard)
+                    if ((prompt.UseClipboard || forceClipboardForRequest) && hasClipboard)
                     {
                         if (!string.IsNullOrWhiteSpace(resultText))
                             resultText += "\n\n";
@@ -1941,7 +2126,7 @@ private static bool IsUsablePath(string path)
                          // based on IsMailPrompt flag.
                     }
                     
-                    resultText = await ProcessWithAiAsync(transcript, prompt, geminiKey, openAiKey);
+                    resultText = await ProcessWithAiAsync(transcript ?? string.Empty, prompt, geminiKey, openAiKey, forceClipboardForRequest);
                 }
 
                 if (string.IsNullOrWhiteSpace(resultText))
@@ -2064,30 +2249,59 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         return false;
     }
 }
-    private PromptDefinition? PickPrompt()
+    private (PromptDefinition? Prompt, bool UseClipboardOverride) PickPrompt()
     {
         if (_prompts.Count == 0)
-            return null;
+            return (null, false);
 
         if (_config.AiUseDefaultPrompt && _defaultPrompt != null)
-            return _defaultPrompt;
+            return (_defaultPrompt, false);
 
         if (_config.AiUseAutoPrompt && !string.IsNullOrWhiteSpace(_config.LastPromptId))
         {
             var last = _prompts.FirstOrDefault(p => p.Id == _config.LastPromptId);
             if (last != null)
-                return last;
+                return (last, false);
         }
 
         var picker = new PromptPickerWindow(_prompts);
-        var selected = picker.ShowDialog() == true ? picker.SelectedPrompt : null;
+        var selected = picker.ShowDialog() == true
+            ? (picker.SelectedPrompt, picker.UseClipboardOverride)
+            : (null, false);
         RestoreTargetWindowFocus();
         return selected;
     }
 
-    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt, string? geminiKey, string? openAiKey)
+    private async Task<string> ProcessWithAiAsync(string text, PromptDefinition prompt, string? geminiKey, string? openAiKey, bool forceClipboardForRequest)
     {
-        BuildPromptBlocks(prompt, text, out var systemInstruction, out var bodyText);
+        BuildPromptBlocks(prompt, text, out var systemInstruction, out var bodyText, forceClipboardForRequest);
+
+        if (prompt.Provider == AiProvider.LocalQwen)
+        {
+            string? modelPath = ResolvePromptLocalAiModelPath(prompt);
+            if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+                throw new InvalidOperationException("Lokal AI-modell saknas. Öppna promptinställningar och välj/ladda ner modell.");
+
+            int configuredTokens = prompt.LocalAiMaxTokens ?? _config.LocalAiMaxTokens;
+            int tokenBudget = GetAdaptiveLocalAiMaxTokens(text, configuredTokens);
+            double temperature = prompt.LocalAiTemperature ?? _config.LocalAiTemperature;
+            int contextSize = GetRecommendedLocalAiContextSize(prompt.LocalAiContextSize ?? _config.LocalAiContextSize);
+            int timeoutSeconds = prompt.LocalAiTimeoutSeconds ?? _config.LocalAiTimeoutSeconds;
+            int gpuLayers = prompt.LocalAiGpuLayers ?? _config.LocalAiGpuLayers;
+            _logger?.Info($"LocalAI request: chars={text.Length}, maxTokens={tokenBudget}, ctx={contextSize}, gpuLayers={gpuLayers}");
+
+            return await _localQwenClient.GenerateAsync(
+                modelPath,
+                systemInstruction,
+                bodyText,
+                prompt.GeminiUseThinking,
+                (float)temperature,
+                tokenBudget,
+                contextSize: contextSize,
+                timeoutSeconds: timeoutSeconds,
+                gpuLayers: gpuLayers,
+                configuredServerPath: _config.LocalAiServerPath);
+        }
 
         if (prompt.Provider == AiProvider.Gemini)
         {
@@ -2129,7 +2343,7 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         return string.IsNullOrWhiteSpace(ui) ? null : ui;
     }
 
-    private void BuildPromptBlocks(PromptDefinition prompt, string transcript, out string systemInstruction, out string bodyText)
+    private void BuildPromptBlocks(PromptDefinition prompt, string transcript, out string systemInstruction, out string bodyText, bool forceClipboardForRequest)
     {
         systemInstruction = prompt.SystemInstruction.Trim();
         
@@ -2155,7 +2369,7 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         }
 
         string clipboardBlock = string.Empty;
-        if (prompt.UseClipboard && !string.IsNullOrWhiteSpace(_clipboardContext))
+        if ((prompt.UseClipboard || forceClipboardForRequest) && !string.IsNullOrWhiteSpace(_clipboardContext))
         {
             clipboardBlock = $"[CLIPBOARD CONTEXT]\n{_clipboardContext}\n\n";
         }
@@ -2178,6 +2392,23 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
     private bool IsAutoPasteEnabled()
     {
         return AutoPasteCheckBox.IsChecked == true;
+    }
+
+    private int GetAdaptiveLocalAiMaxTokens(string transcript, int configuredMaxTokens)
+    {
+        int configured = Math.Max(16, configuredMaxTokens);
+        int chars = transcript?.Length ?? 0;
+
+        int adaptiveCap = chars switch
+        {
+            <= 60 => 64,
+            <= 180 => 96,
+            <= 500 => 160,
+            <= 1200 => 256,
+            _ => configured
+        };
+
+        return Math.Min(configured, adaptiveCap);
     }
 
     private sealed class ModelPreset
@@ -2208,6 +2439,35 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         Directory.CreateDirectory(Path.Combine(dataDir, "logs"));
         Directory.CreateDirectory(Path.Combine(dataDir, "models"));
         return dataDir;
+    }
+
+    private static string GetDefaultLocalAiModelDir()
+    {
+        string[] roots =
+        [
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TapScribe")
+        ];
+
+        foreach (string root in roots.Where(r => !string.IsNullOrWhiteSpace(r)))
+        {
+            try
+            {
+                string localAiDir = Path.Combine(root, "TapScribe", "local-ai-models");
+                Directory.CreateDirectory(localAiDir);
+                return localAiDir;
+            }
+            catch
+            {
+                // Try next location.
+            }
+        }
+
+        // Last resort: relative folder under current base.
+        string fallback = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local-ai-models");
+        Directory.CreateDirectory(fallback);
+        return fallback;
     }
 
     private static AppConfig LoadConfigWithMigration(string configPath)
@@ -2270,7 +2530,8 @@ private async Task<bool> SendToWebhookAsync(string text, string url, string toke
         var newConfig = new AppConfig
         {
             ModelDir = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "models"),
-            LogDir = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "logs")
+            LogDir = Path.Combine(Path.GetDirectoryName(configPath) ?? string.Empty, "logs"),
+            LocalAiModelDir = GetDefaultLocalAiModelDir()
         };
         if (newConfig.EnsureDefaultsAndMigrate())
         {

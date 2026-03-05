@@ -14,6 +14,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        _logPath = InitLogPath();
+
         _mutex = new Mutex(true, "TapScribe-PC-SingleInstance-Mutex", out bool createdNew);
         if (!createdNew)
         {
@@ -23,7 +25,6 @@ public partial class App : System.Windows.Application
         }
 
         base.OnStartup(e);
-        _logPath = InitLogPath();
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -34,17 +35,28 @@ public partial class App : System.Windows.Application
 
         Dispatcher.InvokeAsync(() =>
         {
-            var main = new MainWindow();
-            MainWindow = main;
-            main.Show();
             try
             {
+                var main = new MainWindow();
+                MainWindow = main;
+                main.Show();
                 splash.Close();
             }
-            catch
+            catch (Exception ex)
             {
+                try
+                {
+                    splash.Close();
+                }
+                catch
+                {
+                }
+
+                LogException(ex, "Startup");
+                ShowFatalError(ex);
+                Current.Shutdown();
             }
-        }, DispatcherPriority.Background);
+        }, DispatcherPriority.Normal);
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

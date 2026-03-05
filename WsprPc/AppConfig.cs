@@ -9,7 +9,7 @@ public sealed class AppConfig
 {
     private const string DefaultUpdateRepoOwner = "Olleman82";
     private const string DefaultUpdateRepoName = "TapScribePC-Public";
-    public const int CurrentSettingsVersion = 9;
+    public const int CurrentSettingsVersion = 13;
 
     public int SettingsVersion { get; set; } = CurrentSettingsVersion;
     public string? WhisperCliPath { get; set; }
@@ -41,6 +41,15 @@ public sealed class AppConfig
     public int? ManualThreads { get; set; }
     public bool DarkMode { get; set; }
     public bool EnableVad { get; set; } = true;
+    public string? LocalAiModelDir { get; set; }
+    public string? SelectedLocalAiModelId { get; set; }
+    public string? LocalAiModelPath { get; set; }
+    public string? LocalAiServerPath { get; set; }
+    public int LocalAiMaxTokens { get; set; } = 384;
+    public double LocalAiTemperature { get; set; } = 0.2;
+    public int LocalAiContextSize { get; set; } // 0 = auto
+    public int LocalAiTimeoutSeconds { get; set; } = 120;
+    public int LocalAiGpuLayers { get; set; } = -1; // -1 = auto
     
     // Diarization settings
     public string? SherpaModelsPath { get; set; }
@@ -172,6 +181,35 @@ public sealed class AppConfig
             changed = true;
         }
 
+        if (SettingsVersion < 10)
+        {
+            LocalAiMaxTokens = 384;
+            LocalAiTemperature = 0.2;
+            SettingsVersion = 10;
+            changed = true;
+        }
+
+        if (SettingsVersion < 11)
+        {
+            LocalAiContextSize = 0;
+            SettingsVersion = 11;
+            changed = true;
+        }
+
+        if (SettingsVersion < 12)
+        {
+            LocalAiTimeoutSeconds = 120;
+            SettingsVersion = 12;
+            changed = true;
+        }
+
+        if (SettingsVersion < 13)
+        {
+            LocalAiGpuLayers = -1;
+            SettingsVersion = 13;
+            changed = true;
+        }
+
         if (SettingsVersion < CurrentSettingsVersion)
         {
             SettingsVersion = CurrentSettingsVersion;
@@ -187,6 +225,36 @@ public sealed class AppConfig
         if (SilenceDurationSeconds <= 0)
         {
             SilenceDurationSeconds = 1.0;
+            changed = true;
+        }
+
+        if (LocalAiMaxTokens <= 0)
+        {
+            LocalAiMaxTokens = 384;
+            changed = true;
+        }
+
+        if (LocalAiTemperature < 0 || LocalAiTemperature > 2)
+        {
+            LocalAiTemperature = 0.2;
+            changed = true;
+        }
+
+        if (LocalAiContextSize < 0)
+        {
+            LocalAiContextSize = 0;
+            changed = true;
+        }
+
+        if (LocalAiTimeoutSeconds <= 0)
+        {
+            LocalAiTimeoutSeconds = 120;
+            changed = true;
+        }
+
+        if (LocalAiGpuLayers < -1)
+        {
+            LocalAiGpuLayers = -1;
             changed = true;
         }
 
